@@ -12,82 +12,84 @@ st.markdown(
 <style>
 /* Background and main container */
 body {
-    background: radial-gradient(circle at top, #1e293b 0, #020617 55%, #020617 100%) !important;
+    background: radial-gradient(circle at top, #0b1220 0, #071022 55%, #020617 100%) !important;
     color: #e5e7eb !important;
 }
 section.main > div.block-container {
-    padding-top: 1.25rem !important;
-    padding-bottom: 2rem !important;
+    padding-top: 1rem !important;
+    padding-bottom: 1.5rem !important;
 }
 
 /* Title */
 .mealsync-title {
-    font-size: 3rem;
+    font-size: 2.6rem;
     font-weight: 800;
     color: #60a5fa;
     text-align: center;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.2rem;
 }
 .mealsync-subtitle {
     text-align: center;
     color: #9ca3af;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 /* Week buttons */
 div.week-buttons > div.stButton > button {
     border-radius: 999px !important;
-    padding: 0.4rem 1.2rem !important;
-    font-size: 0.9rem !important;
-    border: 1px solid rgba(148,163,184,0.6) !important;
-    background: rgba(15,23,42,0.4) !important;
+    padding: 0.36rem 1rem !important;
+    font-size: 0.85rem !important;
+    border: 1px solid rgba(148,163,184,0.5) !important;
+    background: rgba(15,23,42,0.45) !important;
     color: #e5e7eb !important;
+    white-space: nowrap !important;
 }
 div.week-buttons > div.stButton > button[kind="primary"] {
     background: linear-gradient(135deg, #2563eb, #a855f7) !important;
     border: 1px solid transparent !important;
 }
-div.week-buttons > div.stButton > button:hover {
-    filter: brightness(1.15) !important;
-}
 
-/* Generic buttons */
+/* Buttons: prevent wrapping, consistent sizing */
 div.stButton > button {
-    border-radius: 999px !important;
-    border: 1px solid rgba(148,163,184,0.5) !important;
-    background-color: rgba(15,23,42,0.8) !important;
+    border-radius: 10px !important;
+    border: 1px solid rgba(148,163,184,0.45) !important;
+    background-color: rgba(15,23,42,0.85) !important;
     color: #e5e7eb !important;
-    font-size: 0.8rem !important;
-    padding: 0.28rem 0.9rem !important;
-}
-div.stButton > button:hover {
-    background-color: rgba(30,64,175,0.9) !important;
+    font-size: 0.82rem !important;
+    padding: 0.28rem 0.7rem !important;
+    white-space: nowrap !important;
+    min-width: 72px !important; /* ensures 'Default' doesn't wrap */
 }
 
 /* Card container */
 .day-card, .budgets-card, .summary-card {
-    background: rgba(15,23,42,0.95) !important;
-    border-radius: 1rem !important;
-    padding: 1rem 1rem 0.75rem !important;
-    border: 1px solid rgba(148,163,184,0.45) !important;
-    box-shadow: 0 18px 45px rgba(15,23,42,0.9) !important;
-    margin-bottom: 0.8rem;
+    background: rgba(12,18,30,0.93) !important;
+    border-radius: 0.9rem !important;
+    padding: 0.8rem 0.9rem 0.8rem !important;
+    border: 1px solid rgba(148,163,184,0.08) !important;
+    box-shadow: 0 12px 30px rgba(2,6,23,0.7) !important;
+    margin-bottom: 0.8rem !important;
 }
 
-/* Day headers */
+/* Remove extra box-like header look: make header text simple */
 .day-header {
-    font-weight: bold !important;
-    font-size: 1.05rem !important;
-    margin-bottom: 0.45rem !important;
-    color: #38bdf8 !important;
+    font-weight: 700 !important;
+    font-size: 1.02rem !important;
+    margin: 0 0 0.45rem 0 !important;
+    color: #c7f0ff !important;
+    background: none !important;
+    padding: 0 !important;
+    border: none !important;
 }
+
+/* Sunday color */
 .day-header.sunday {
-    color: #fb7185 !important;
+    color: #ff9aa2 !important;
 }
 
 /* Meal labels */
 .meal-label {
-    font-size: 0.75rem !important;
+    font-size: 0.72rem !important;
     text-transform: uppercase !important;
     letter-spacing: 0.06em !important;
     color: #9ca3af !important;
@@ -96,42 +98,42 @@ div.stButton > button:hover {
 
 /* Selectbox styling */
 div.stSelectbox > div > div {
-    background-color: rgba(15,23,42,0.95) !important;
-    border-radius: 0.6rem !important;
-    border: 1px solid rgba(148,163,184,0.6) !important;
+    background-color: rgba(8,12,20,0.95) !important;
+    border-radius: 0.55rem !important;
+    border: 1px solid rgba(148,163,184,0.06) !important;
+    color: #e5e7eb !important;
 }
 
 /* Text input styling (for budgets/custom price) */
 div.stTextInput > div > input[type="text"] {
-    background-color: rgba(15,23,42,0.95) !important;
-    border-radius: 0.6rem !important;
-    border: 1px solid rgba(148,163,184,0.6) !important;
+    background-color: rgba(8,12,20,0.95) !important;
+    border-radius: 0.55rem !important;
+    border: 1px solid rgba(148,163,184,0.06) !important;
     padding: 0.45rem !important;
     color: #e5e7eb !important;
 }
 
-/* Budgets */
+/* Budgets card title: remove extra spacing above it */
 .budgets-card-title {
-    font-size: 1.05rem !important;
-    font-weight: 600 !important;
-    margin-bottom: 0.45rem !important;
+    font-size: 1.02rem !important;
+    font-weight: 700 !important;
+    margin: 0 0 0.45rem 0 !important;
+    color: #e6f6ff !important;
+    padding: 0 !important;
 }
+
+/* Budget label small */
 .budget-label {
     font-size: 0.85rem !important;
-    color: #e5e7eb !important;
-}
-.budget-diff-positive {
-    color: #4ade80 !important;
-}
-.budget-diff-negative {
-    color: #f87171 !important;
+    color: #cfefff !important;
+    margin-bottom: 0.15rem !important;
 }
 
 /* Summary */
 .summary-card-title {
-    font-size: 1.05rem !important;
-    font-weight: 600 !important;
-    margin-bottom: 0.6rem !important;
+    font-size: 1.02rem !important;
+    font-weight: 700 !important;
+    margin-bottom: 0.5rem !important;
 }
 .summary-row {
     display: flex !important;
@@ -139,9 +141,9 @@ div.stTextInput > div > input[type="text"] {
     margin-bottom: 0.35rem !important;
 }
 .summary-value {
-    font-size: 1rem !important;
+    font-size: 0.98rem !important;
     font-weight: 700 !important;
-    color: #93c5fd !important;
+    color: #bfe6ff !important;
 }
 </style>
 """,
@@ -160,7 +162,7 @@ class Meal:
     name: str
     price: float
 
-# Breakfast / lunch / dinner options (adjust prices / names if needed)
+# Meal options (adjust prices as needed)
 breakfast_options: List[Meal] = [
     Meal("medu-vada", "Medu vada", 20.0),
     Meal("pongal", "Pongal", 25.0),
@@ -185,7 +187,7 @@ dinner_options: List[Meal] = [
 DEFAULTS = [
     {"week": 1, "day": 2, "meal_name": "Pav bhaji"},
     {"week": 3, "day": 3, "meal_name": "Pav bhaji"},
-    {"week": 1, "day": 4, "meal_name": "Maggi"},        # add Maggi if you want to include it
+    {"week": 1, "day": 4, "meal_name": "Maggi"},        # add Maggi if needed
     {"week": 1, "day": 6, "meal_name": "Alu paratha"},
     {"week": 4, "day": 4, "meal_name": "Alu paratha"},
     {"week": 2, "day": 4, "meal_name": "Macaroni"},
@@ -268,7 +270,7 @@ def get_meal_price(week: int, day_index: int, meal_type: MealType) -> float:
 
 def weekly_cost_for(week: int) -> float:
     total = 0.0
-    for day_index in range(6):  # Mon–Sat
+    for day_index in range(6):
         main_type = get_main_meal_type(week, day_index)
         total += get_meal_price(week, day_index, main_type)
         total += get_meal_price(week, day_index, "dinner")
@@ -346,22 +348,20 @@ for r in range(rows):
     cols = st.columns(cols_per_row, gap="small")
     for c_idx, col in enumerate(cols):
         with col:
-            # If this cell is one of the first 7, show a day card
             if cell_index < 7:
-                day_index = cell_index  # 0..6
+                day_index = cell_index
                 is_sunday = (day_index == 6)
                 header_class = "day-header sunday" if is_sunday else "day-header"
-                st.markdown(f"<div class='day-card'><div class='{header_class}'>{WEEK_DAYS[day_index]}</div>", unsafe_allow_html=True)
+                # Day header (no extra boxed background)
+                st.markdown(f"<div class='{header_class}'>{WEEK_DAYS[day_index]}</div>", unsafe_allow_html=True)
 
-                # Toggle (Mon–Sat) between breakfast & lunch
+                # Toggle (Mon–Sat)
                 if not is_sunday:
                     key = get_meal_key(selected_week, day_index)
                     current_choice = st.session_state.day_meal_choices.get(key, "breakfast")
                     icon = "☕" if current_choice == "breakfast" else "🍛"
                     toggle_label = (
-                        f"{icon} Breakfast — click to show Lunch"
-                        if current_choice == "breakfast"
-                        else f"{icon} Lunch — click to show Breakfast"
+                        f"{icon} {current_choice.capitalize()} — click to switch"
                     )
                     if st.button(toggle_label, key=f"toggle-{selected_week}-{day_index}"):
                         st.session_state.day_meal_choices[key] = "lunch" if current_choice == "breakfast" else "breakfast"
@@ -373,12 +373,14 @@ for r in range(rows):
                 else:
                     main_meal_types = [get_main_meal_type(selected_week, day_index), "dinner"]
 
+                # Card container: we render the card boundaries around content
+                st.markdown("<div class='day-card'>", unsafe_allow_html=True)
+
                 for mt in main_meal_types:
                     pretty = mt.capitalize()
                     icon = "☕" if mt == "breakfast" else ("☀️" if mt == "lunch" else "🌙")
                     st.markdown(f"<div class='meal-label'>{icon} {pretty}</div>", unsafe_allow_html=True)
 
-                    # Option list: skip + options + custom
                     options_meals = get_options_for_meal_type(mt, selected_week, day_index)
                     option_values = ["skip"] + [m.id for m in options_meals] + ["custom"]
                     labels = {"skip": "Skip this meal", "custom": "Custom price (type Rs.)"}
@@ -402,7 +404,6 @@ for r in range(rows):
                         label_visibility="collapsed",
                     )
 
-                    # Custom price: use text_input (no +/-). store as string.
                     if choice == "custom":
                         price_key = f"price-w{selected_week}-d{day_index}-{mt}"
                         if price_key not in st.session_state:
@@ -416,7 +417,7 @@ for r in range(rows):
                 st.markdown("</div>", unsafe_allow_html=True)
 
             else:
-                # 8th cell --> Budgets card
+                # Budgets card (8th cell)
                 st.markdown("<div class='budgets-card'>", unsafe_allow_html=True)
                 st.markdown("<div class='budgets-card-title'>Budgets</div>", unsafe_allow_html=True)
 
@@ -427,19 +428,16 @@ for r in range(rows):
                     "grandTotal": "Grand Total",
                 }
 
-                # We'll place a small reset button first then the text input so setting happens safely
                 for key, label in budget_labels.items():
-                    # Button column + input column
-                    b_col, i_col = st.columns([1, 3])
-                    with b_col:
+                    # default button left, input right
+                    left_col, right_col = st.columns([1, 3], gap="small")
+                    with left_col:
                         if st.button("Default", key=f"reset-{key}"):
                             st.session_state[f"budget-{key}"] = f"{float(DEFAULT_BUDGETS[key]):.2f}"
                             st.rerun()
-                    with i_col:
-                        # Ensure key exists (string)
+                    with right_col:
                         if f"budget-{key}" not in st.session_state:
                             st.session_state[f"budget-{key}"] = f"{float(DEFAULT_BUDGETS[key]):.2f}"
-                        # text_input (no +/-)
                         st.markdown(f"<div class='budget-label'>{label}</div>", unsafe_allow_html=True)
                         st.text_input(
                             "Budget (Rs.)",
@@ -455,7 +453,6 @@ for r in range(rows):
 # Cost summary (below grid)
 # =========================
 
-# Read budgets (parse strings safely)
 budgets = {}
 for k in DEFAULT_BUDGETS.keys():
     raw = st.session_state.get(f"budget-{k}", f"{DEFAULT_BUDGETS[k]:.2f}")
