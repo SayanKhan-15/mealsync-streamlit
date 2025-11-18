@@ -479,21 +479,25 @@ with day_cols[-1]:
         "grandTotal": "Grand Total",
     }
 
-    for key, label in budget_labels.items():
-        budget_value = st.session_state.get(f"budget-{key}", DEFAULT_BUDGETS[key])
+        for key, label in budget_labels.items():
         c1, c2 = st.columns([2, 1])
         with c1:
-            st.markdown(f"<div class='budget-label'>{label}</div>", unsafe_allow_html=True)
+            st.markdown(
+                f"<div class='budget-label'>{label}</div>",
+                unsafe_allow_html=True,
+            )
+            # Let the widget use the existing session_state value;
+            # we don't pass `value=` here.
             st.number_input(
                 "Budget (Rs.)",
                 min_value=0.0,
                 step=10.0,
                 key=f"budget-{key}",
-                value=float(budget_value),
                 label_visibility="collapsed",
             )
         with c2:
             if st.button("Default", key=f"reset-{key}"):
+                # Reset this budget to its default and rerun
                 st.session_state[f"budget-{key}"] = DEFAULT_BUDGETS[key]
                 st.rerun()
 
