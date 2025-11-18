@@ -236,7 +236,7 @@ for idx, day_index in enumerate(range(7)):
             ):
                 new_choice = "lunch" if current_choice == "breakfast" else "breakfast"
                 st.session_state.day_meal_choices[key] = new_choice
-                st.experimental_rerun()
+                st.rerun()
 
         # Which meal types do we show?
         if is_sunday:
