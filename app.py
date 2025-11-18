@@ -183,7 +183,7 @@ dinner_options = [
 DEFAULTS = [
     {"week": 1, "day": 2, "meal_name": "Pav bhaji"},
     {"week": 3, "day": 3, "meal_name": "Pav bhaji"},
-    {"week": 1, "day": 4, "meal_name": "Maggi"},   # Add Maggi if needed
+    {"week": 1, "day": 4, "meal_name": "Maggi"},   # Add Maggi to breakfast_options if you actually want it
     {"week": 1, "day": 6, "meal_name": "Alu paratha"},
     {"week": 4, "day": 4, "meal_name": "Alu paratha"},
     {"week": 2, "day": 4, "meal_name": "Macaroni"},
@@ -202,33 +202,33 @@ WEEK_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
 
 # =========================
-#  Helpers
+#  Helper Functions
 # =========================
 
-def get_meal_key(week, day):
+def get_meal_key(week: int, day: int) -> str:
     return f"w{week}-d{day}"
 
-def find_breakfast_by_name(name):
+def find_breakfast_by_name(name: str) -> Optional[Meal]:
     for m in breakfast_options:
         if m.name.lower() == name.lower():
             return m
     return None
 
-def get_default_meal(week, day):
+def get_default_meal(week: int, day: int) -> Optional[Meal]:
     real_day = day + 1
     for row in DEFAULTS:
         if row["week"] == week and row["day"] == real_day:
             return find_breakfast_by_name(row["meal_name"])
     return None
 
-def get_breakfast_options(week, day):
+def get_breakfast_options(week: int, day: int) -> List[Meal]:
     main = get_default_meal(week, day)
     basics = [m for m in breakfast_options if m.name in ["Medu vada", "Pongal", "Sambar vada", "Curd vada"]]
     if main:
         return [main] + [x for x in basics if x.id != main.id]
     return basics
 
-def get_meals(meal_type, week, day):
+def get_meals(meal_type: MealType, week: int, day: int) -> List[Meal]:
     if meal_type == "breakfast":
         return get_breakfast_options(week, day)
     if meal_type == "lunch":
@@ -237,49 +237,51 @@ def get_meals(meal_type, week, day):
         return dinner_options
     return []
 
-def get_main_type(week, day):
+def get_main_type(week: int, day: int) -> MealType:
     if day == 6:
         return "lunch"
     return st.session_state.day_meal_choice.get(get_meal_key(week, day), "breakfast")
 
-def get_price(week, day, meal_type):
-    sel = st.session_state.get(f"sel-{week}-{day}-{meal_type}", "skip")
+def get_price(week: int, day: int, meal_type: MealType) -> float:
+    sel_key = f"sel-{week}-{day}-{meal_type}"
+    sel = st.session_state.get(sel_key, "skip")
     if sel == "skip":
-        return 0
+        return 0.0
     if sel == "custom":
-        return float(st.session_state.get(f"price-{week}-{day}-{meal_type}", 0))
+        price_key = f"price-{week}-{day}-{meal_type}"
+        return float(st.session_state.get(price_key, 0.0) or 0.0)
     for m in get_meals(meal_type, week, day):
         if m.id == sel:
-            return m.price
-    return 0
+            return float(m.price)
+    return 0.0
 
-def weekly_cost(week):
-    total = 0
+def weekly_cost(week: int) -> float:
+    total = 0.0
     for d in range(6):
         total += get_price(week, d, get_main_type(week, d))
         total += get_price(week, d, "dinner")
     return total
 
-def sunday_cost_all():
+def sunday_cost_all() -> float:
     return sum(get_price(w, 6, "lunch") + get_price(w, 6, "dinner") for w in range(1, 5))
 
-def weekdays_cost_all():
-    total = 0
+def weekdays_cost_all() -> float:
+    total = 0.0
     for w in range(1, 5):
         total += weekly_cost(w)
     return total
 
-def format_diff(cost, budget):
+def format_diff(cost: float, budget: float) -> str:
     diff = budget - cost
     if abs(diff) < 1e-9:
         return ""
     sign = "+" if diff > 0 else ""
-    color = "budget-diff-positive" if diff > 0 else "budget-diff-negative"
-    return f"<span class='{color}'>({sign}{diff:.2f})</span>"
+    color_class = "budget-diff-positive" if diff > 0 else "budget-diff-negative"
+    return f"<span class='{color_class}'>({sign}{diff:.2f})</span>"
 
 
 # =========================
-#  Session state
+#  Session State Init
 # =========================
 
 if "selected_week" not in st.session_state:
@@ -290,8 +292,9 @@ if "day_meal_choice" not in st.session_state:
 
 if "budgets_init" not in st.session_state:
     for k, v in DEFAULT_BUDGETS.items():
-        st.session_state[f"budget-{k}"] = v
+        st.session_state[f"budget-{k}"] = float(v)
     st.session_state.budgets_init = True
+
 
 # =========================
 #  Title
@@ -300,8 +303,9 @@ if "budgets_init" not in st.session_state:
 st.markdown("<div class='mealsync-title'>MealSync</div>", unsafe_allow_html=True)
 st.markdown("<div class='mealsync-subtitle'>Your weekly meal planning, simplified.</div>", unsafe_allow_html=True)
 
+
 # =========================
-#  Week selector
+#  Week Selector
 # =========================
 
 st.markdown("<div class='week-buttons'></div>", unsafe_allow_html=True)
@@ -311,7 +315,7 @@ for i, col in enumerate(week_cols, start=1):
         clicked = st.button(
             f"Week {i}",
             key=f"wk{i}",
-            type=("primary" if st.session_state.selected_week == i else "secondary")
+            type=("primary" if st.session_state.selected_week == i else "secondary"),
         )
         if clicked:
             st.session_state.selected_week = i
@@ -320,11 +324,12 @@ for i, col in enumerate(week_cols, start=1):
 week = st.session_state.selected_week
 st.markdown("---")
 
+
 # =========================
-#  Main day grid
+#  Main Day Grid
 # =========================
 
-day_cols = st.columns([1,1,1,1,1.2])
+day_cols = st.columns([1, 1, 1, 1, 1.2])
 
 for day in range(7):
     col_index = day if day < 4 else day - 4
@@ -332,11 +337,11 @@ for day in range(7):
 
     with col:
         st.markdown(
-            f"<div class='day-card'><div class='day-header {'sunday' if day==6 else ''}'>{WEEK_DAYS[day]}</div>",
+            f"<div class='day-card'><div class='day-header {'sunday' if day == 6 else ''}'>{WEEK_DAYS[day]}</div>",
             unsafe_allow_html=True,
         )
 
-        # Toggle (Mon–Sat)
+        # Breakfast/Lunch toggle for Mon–Sat
         if day != 6:
             key = get_meal_key(week, day)
             current = st.session_state.day_meal_choice.get(key, "breakfast")
@@ -350,26 +355,29 @@ for day in range(7):
                 st.session_state.day_meal_choice[key] = "lunch" if current == "breakfast" else "breakfast"
                 st.rerun()
 
-        meal_types = ["lunch","dinner"] if day == 6 else [get_main_type(week, day), "dinner"]
+        meal_types: List[MealType] = ["lunch", "dinner"] if day == 6 else [get_main_type(week, day), "dinner"]
 
         for mt in meal_types:
-            icon = "☕" if mt=="breakfast" else ("☀️" if mt=="lunch" else "🌙")
-            st.markdown(f"<div class='meal-label'>{icon} {mt.capitalize()}</div>", unsafe_allow_html=True)
+            icon = "☕" if mt == "breakfast" else ("☀️" if mt == "lunch" else "🌙")
+            st.markdown(
+                f"<div class='meal-label'>{icon} {mt.capitalize()}</div>",
+                unsafe_allow_html=True,
+            )
 
-            select_key = f"sel-{week}-{day}-{mt}"
-
-            if select_key not in st.session_state:
+            sel_key = f"sel-{week}-{day}-{mt}"
+            # Initial default selection
+            if sel_key not in st.session_state:
                 default = "skip"
                 if mt == "breakfast":
                     d = get_default_meal(week, day)
                     if d:
                         default = d.id
-                st.session_state[select_key] = default
+                st.session_state[sel_key] = default
 
             options = ["skip"] + [m.id for m in get_meals(mt, week, day)] + ["custom"]
             labels = {
                 "skip": "Skip meal",
-                "custom": "Custom price"
+                "custom": "Custom price",
             }
             for m in get_meals(mt, week, day):
                 labels[m.id] = f"{m.name} (Rs. {m.price})"
@@ -377,20 +385,26 @@ for day in range(7):
             choice = st.selectbox(
                 "",
                 options,
+                key=sel_key,
                 format_func=lambda x: labels[x],
-                key=select_key
             )
 
             if choice == "custom":
-                pk = f"price-{week}-{day}-{mt}"
-                if pk not in st.session_state:
-                    st.session_state[pk] = 0
-                st.number_input("Custom price", min_value=0.0, key=pk, label_visibility="collapsed")
+                price_key = f"price-{week}-{day}-{mt}"
+                if price_key not in st.session_state:
+                    st.session_state[price_key] = 0.0
+                st.number_input(
+                    "Custom price",
+                    min_value=0.0,
+                    key=price_key,
+                    label_visibility="collapsed",
+                )
 
         st.markdown("</div>", unsafe_allow_html=True)
 
+
 # =========================
-#  Budgets card
+#  Budgets Card
 # =========================
 
 with day_cols[-1]:
@@ -405,9 +419,20 @@ with day_cols[-1]:
     }
 
     for key, label in labels.items():
-        c1, c2 = st.columns([2,1])
+        c1, c2 = st.columns([2, 1])
+
+        # IMPORTANT: Button FIRST (updates session_state),
+        # then number_input reads the updated value.
+        with c2:
+            if st.button("Default", key=f"reset-{key}"):
+                st.session_state[f"budget-{key}"] = float(DEFAULT_BUDGETS[key])
+                st.rerun()
+
         with c1:
-            st.markdown(f"<div class='budget-label'>{label}</div>", unsafe_allow_html=True)
+            st.markdown(
+                f"<div class='budget-label'>{label}</div>",
+                unsafe_allow_html=True,
+            )
             st.number_input(
                 "Budget (Rs.)",
                 min_value=0.0,
@@ -415,15 +440,12 @@ with day_cols[-1]:
                 key=f"budget-{key}",
                 label_visibility="collapsed",
             )
-        with c2:
-            if st.button("Default", key=f"reset-{key}"):
-                st.session_state[f"budget-{key}"] = DEFAULT_BUDGETS[key]
-                st.rerun()
 
     st.markdown("</div>", unsafe_allow_html=True)
 
+
 # =========================
-#  Summary card
+#  Summary Card
 # =========================
 
 bud = {k: float(st.session_state[f"budget-{k}"]) for k in DEFAULT_BUDGETS}
@@ -437,11 +459,11 @@ st.markdown("")
 st.markdown("<div class='summary-card'>", unsafe_allow_html=True)
 st.markdown("<div class='summary-card-title'>Cost Summary</div>", unsafe_allow_html=True)
 
-def row(lbl, val, budget_key):
-    diff = format_diff(val, bud[budget_key])
+def row(lbl: str, val: float, budget_key: str):
+    diff_html = format_diff(val, bud[budget_key])
     st.markdown(
         f"<div class='summary-row'><span>{lbl}</span>"
-        f"<span class='summary-value'>Rs. {val:.2f} {diff}</span></div>",
+        f"<span class='summary-value'>Rs. {val:.2f} {diff_html}</span></div>",
         unsafe_allow_html=True,
     )
 
