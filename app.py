@@ -3,27 +3,26 @@ from dataclasses import dataclass
 from typing import List, Literal, Optional
 
 # =========================
-#  Page + global styling
+#  Page + Styling
 # =========================
 
 st.set_page_config(page_title="MealSync", layout="wide")
 
-# Custom CSS to mimic the dark, card-based UI
 st.markdown(
     """
 <style>
-/* Background + overall layout */
+/* Background and main container */
 body {
-    background: radial-gradient(circle at top, #1e293b 0, #020617 45%, #020617 100%) !important;
+    background: radial-gradient(circle at top, #1e293b 0, #020617 55%, #020617 100%) !important;
     color: #e5e7eb !important;
 }
 
 section.main > div.block-container {
-    padding-top: 1.5rem;
-    padding-bottom: 2rem;
+    padding-top: 1.25rem !important;
+    padding-bottom: 2rem !important;
 }
 
-/* Main title */
+/* Title */
 .mealsync-title {
     font-size: 3rem;
     font-weight: 800;
@@ -31,145 +30,125 @@ section.main > div.block-container {
     text-align: center;
     margin-bottom: 0.25rem;
 }
-
 .mealsync-subtitle {
     text-align: center;
     color: #9ca3af;
     margin-bottom: 1.5rem;
 }
 
-/* Week buttons (pill style) */
+/* Week buttons */
 div.week-buttons > div.stButton > button {
-    border-radius: 999px;
-    padding: 0.35rem 1.2rem;
-    font-size: 0.9rem;
-    border: 1px solid rgba(148,163,184,0.6);
-    background: transparent;
-    color: #e5e7eb;
-    transition: all 0.15s ease;
+    border-radius: 999px !important;
+    padding: 0.4rem 1.2rem !important;
+    font-size: 0.9rem !important;
+    border: 1px solid rgba(148,163,184,0.6) !important;
+    background: rgba(15,23,42,0.4) !important;
+    color: #e5e7eb !important;
 }
 div.week-buttons > div.stButton > button[kind="primary"] {
-    background: linear-gradient(135deg, #2563eb, #a855f7);
-    border-color: transparent;
+    background: linear-gradient(135deg, #2563eb, #a855f7) !important;
+    border: 1px solid transparent !important;
 }
 div.week-buttons > div.stButton > button:hover {
-    filter: brightness(1.05);
+    filter: brightness(1.15) !important;
 }
 
-/* Generic primary buttons (toggle, defaults, etc.) */
+/* Generic buttons */
 div.stButton > button {
-    border-radius: 999px;
-    border: 1px solid rgba(148,163,184,0.5);
-    background-color: rgba(15,23,42,0.8);
-    color: #e5e7eb;
-    font-size: 0.8rem;
-    padding: 0.3rem 0.9rem;
+    border-radius: 999px !important;
+    border: 1px solid rgba(148,163,184,0.5) !important;
+    background-color: rgba(15,23,42,0.8) !important;
+    color: #e5e7eb !important;
+    font-size: 0.8rem !important;
+    padding: 0.28rem 0.9rem !important;
 }
 div.stButton > button:hover {
-    background-color: rgba(30,64,175,0.9);
+    background-color: rgba(30,64,175,0.9) !important;
 }
 
-/* Card containers */
+/* Card container */
 .day-card, .budgets-card, .summary-card {
-    background: rgba(15,23,42,0.9);
-    border-radius: 1rem;
-    padding: 1rem 1rem 0.75rem;
-    border: 1px solid rgba(148,163,184,0.45);
-    box-shadow: 0 18px 45px rgba(15,23,42,0.9);
+    background: rgba(15,23,42,0.9) !important;
+    border-radius: 1rem !important;
+    padding: 1rem 1rem 0.75rem !important;
+    border: 1px solid rgba(148,163,184,0.45) !important;
+    box-shadow: 0 18px 45px rgba(15,23,42,0.9) !important;
 }
 
-/* Day header */
+/* Day headers */
 .day-header {
-    font-weight: 700;
-    font-size: 1.05rem;
-    margin-bottom: 0.4rem;
-    color: #38bdf8;
+    font-weight: bold !important;
+    font-size: 1.1rem !important;
+    margin-bottom: 0.55rem !important;
+    color: #38bdf8 !important;
 }
 .day-header.sunday {
-    color: #fb7185;
+    color: #fb7185 !important;
 }
 
-/* Meal label */
+/* Meal labels */
 .meal-label {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: #9ca3af;
-    margin-bottom: 0.15rem;
+    font-size: 0.75rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.06em !important;
+    color: #9ca3af !important;
+    margin-bottom: 0.15rem !important;
 }
 
-/* Select boxes */
-div.stSelectbox label {
-    font-size: 0.7rem;
-    color: #94a3b8;
-}
+/* Selectbox styling */
 div.stSelectbox > div > div {
-    background-color: rgba(15,23,42,0.95);
-    border-radius: 0.6rem;
-    border: 1px solid rgba(148,163,184,0.6);
+    background-color: rgba(15,23,42,0.95) !important;
+    border-radius: 0.6rem !important;
+    border: 1px solid rgba(148,163,184,0.6) !important;
 }
 
-/* Number inputs (custom price + budgets) */
+/* Number input styling */
 div.stNumberInput > div > div {
-    background-color: rgba(15,23,42,0.95);
-    border-radius: 0.6rem;
-    border: 1px solid rgba(148,163,184,0.6);
+    background-color: rgba(15,23,42,0.95) !important;
+    border-radius: 0.6rem !important;
+    border: 1px solid rgba(148,163,184,0.6) !important;
 }
 
 /* Budgets */
 .budgets-card-title {
-    font-size: 1.05rem;
-    font-weight: 600;
-    margin-bottom: 0.4rem;
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+    margin-bottom: 0.4rem !important;
 }
 .budget-label {
-    font-size: 0.85rem;
-    color: #e5e7eb;
+    font-size: 0.85rem !important;
+    color: #e5e7eb !important;
 }
 .budget-diff-positive {
-    color: #4ade80;
-    font-size: 0.8rem;
+    color: #4ade80 !important;
 }
 .budget-diff-negative {
-    color: #f97373;
-    font-size: 0.8rem;
+    color: #f87171 !important;
 }
 
-/* Cost summary */
+/* Summary */
 .summary-card-title {
-    font-size: 1.05rem;
-    font-weight: 600;
-    margin-bottom: 0.6rem;
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+    margin-bottom: 0.6rem !important;
 }
 .summary-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.4rem;
-}
-.summary-label {
-    font-size: 0.9rem;
+    display: flex !important;
+    justify-content: space-between !important;
+    margin-bottom: 0.35rem !important;
 }
 .summary-value {
-    font-size: 1rem;
-    font-weight: 700;
-    color: #e5e7eb;
-}
-.summary-accent {
-    color: #38bdf8;
-}
-
-/* Shrink top label spaces */
-.stMarkdown {
-    margin-bottom: 0.05rem;
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+    color: #93c5fd !important;
 }
 </style>
-""",
+    """,
     unsafe_allow_html=True,
 )
 
 # =========================
-#  Data models & options
+#  Data Models
 # =========================
 
 MealType = Literal["breakfast", "lunch", "dinner"]
@@ -180,34 +159,31 @@ class Meal:
     name: str
     price: float
 
-# Breakfast options (adapt prices if needed)
-breakfast_options: List[Meal] = [
-    Meal("medu-vada", "Medu vada", 20.0),
-    Meal("pongal", "Pongal", 25.0),
-    Meal("sambar-vada", "Sambar vada", 32.0),
-    Meal("curd-vada", "Curd vada", 32.0),
-    Meal("pav-bhaji", "Pav bhaji", 38.0),
-    Meal("alu-paratha", "Alu paratha", 38.0),
-    Meal("macaroni", "Macaroni", 38.0),
-    Meal("daal-poori", "Daal poori", 38.0),
+breakfast_options = [
+    Meal("medu", "Medu vada", 20),
+    Meal("pongal", "Pongal", 25),
+    Meal("sambar", "Sambar vada", 32),
+    Meal("curd", "Curd vada", 32),
+    Meal("pav", "Pav bhaji", 38),
+    Meal("alu", "Alu paratha", 38),
+    Meal("mac", "Macaroni", 38),
+    Meal("daal", "Daal poori", 38),
 ]
 
-# Simple placeholders for lunch/dinner
-lunch_options: List[Meal] = [
-    Meal("mess-lunch", "Mess Lunch", 60.0),
-    Meal("special-lunch", "Special Lunch", 80.0),
+lunch_options = [
+    Meal("l1", "Mess Lunch", 60),
+    Meal("l2", "Special Lunch", 80),
 ]
 
-dinner_options: List[Meal] = [
-    Meal("mess-dinner", "Mess Dinner", 60.0),
-    Meal("special-dinner", "Special Dinner", 80.0),
+dinner_options = [
+    Meal("d1", "Mess Dinner", 60),
+    Meal("d2", "Special Dinner", 80),
 ]
 
-# Defaults copied from your React logic
 DEFAULTS = [
     {"week": 1, "day": 2, "meal_name": "Pav bhaji"},
     {"week": 3, "day": 3, "meal_name": "Pav bhaji"},
-    {"week": 1, "day": 4, "meal_name": "Maggi"},       # add Maggi to options if you want it
+    {"week": 1, "day": 4, "meal_name": "Maggi"},   # Add Maggi if needed
     {"week": 1, "day": 6, "meal_name": "Alu paratha"},
     {"week": 4, "day": 4, "meal_name": "Alu paratha"},
     {"week": 2, "day": 4, "meal_name": "Macaroni"},
@@ -216,278 +192,222 @@ DEFAULTS = [
 ]
 
 DEFAULT_BUDGETS = {
-    "weekly": 840.0,
-    "sunday": 2140.0,
-    "weekdays": 3360.0,
-    "grandTotal": 5500.0,
+    "weekly": 840,
+    "sunday": 2140,
+    "weekdays": 3360,
+    "grandTotal": 5500,
 }
 
 WEEK_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
 
 # =========================
-#  Helper functions
+#  Helpers
 # =========================
 
-def get_meal_key(week: int, day_index: int) -> str:
-    return f"w{week}-d{day_index}"
+def get_meal_key(week, day):
+    return f"w{week}-d{day}"
 
-
-def find_breakfast_by_name(name: str) -> Optional[Meal]:
+def find_breakfast_by_name(name):
     for m in breakfast_options:
         if m.name.lower() == name.lower():
             return m
     return None
 
-
-def get_default_meal_for(week: int, day_index: int) -> Optional[Meal]:
-    day_of_week = day_index + 1
-    for item in DEFAULTS:
-        if item["week"] == week and item["day"] == day_of_week:
-            return find_breakfast_by_name(item["meal_name"])
+def get_default_meal(week, day):
+    real_day = day + 1
+    for row in DEFAULTS:
+        if row["week"] == week and row["day"] == real_day:
+            return find_breakfast_by_name(row["meal_name"])
     return None
 
+def get_breakfast_options(week, day):
+    main = get_default_meal(week, day)
+    basics = [m for m in breakfast_options if m.name in ["Medu vada", "Pongal", "Sambar vada", "Curd vada"]]
+    if main:
+        return [main] + [x for x in basics if x.id != main.id]
+    return basics
 
-def get_breakfast_options_for(week: int, day_index: int) -> List[Meal]:
-    specific_names = {"Medu vada", "Pongal", "Sambar vada", "Curd vada"}
-    specific = [m for m in breakfast_options if m.name in specific_names]
-
-    default_meal = get_default_meal_for(week, day_index)
-    if default_meal and default_meal in breakfast_options:
-        rest = [m for m in specific if m.id != default_meal.id]
-        return [default_meal] + rest
-    return specific
-
-
-def get_options_for_meal_type(meal_type: MealType, week: int, day_index: int) -> List[Meal]:
+def get_meals(meal_type, week, day):
     if meal_type == "breakfast":
-        return get_breakfast_options_for(week, day_index)
+        return get_breakfast_options(week, day)
     if meal_type == "lunch":
         return lunch_options
     if meal_type == "dinner":
         return dinner_options
     return []
 
-
-def get_main_meal_type(week: int, day_index: int) -> MealType:
-    if day_index == 6:  # Sunday
+def get_main_type(week, day):
+    if day == 6:
         return "lunch"
-    key = get_meal_key(week, day_index)
-    return st.session_state.day_meal_choices.get(key, "breakfast")
+    return st.session_state.day_meal_choice.get(get_meal_key(week, day), "breakfast")
 
-
-def get_meal_price(week: int, day_index: int, meal_type: MealType) -> float:
-    select_key = f"sel-w{week}-d{day_index}-{meal_type}"
-    choice = st.session_state.get(select_key, "skip")
-    if choice == "skip":
-        return 0.0
-    if choice == "custom":
-        price_key = f"price-w{week}-d{day_index}-{meal_type}"
-        return float(st.session_state.get(price_key, 0.0) or 0.0)
-    meals = get_options_for_meal_type(meal_type, week, day_index)
-    for m in meals:
-        if m.id == choice:
+def get_price(week, day, meal_type):
+    sel = st.session_state.get(f"sel-{week}-{day}-{meal_type}", "skip")
+    if sel == "skip":
+        return 0
+    if sel == "custom":
+        return float(st.session_state.get(f"price-{week}-{day}-{meal_type}", 0))
+    for m in get_meals(meal_type, week, day):
+        if m.id == sel:
             return m.price
-    return 0.0
+    return 0
 
-
-def weekly_cost_for(week: int) -> float:
-    total = 0.0
-    for day_index in range(6):  # Mon–Sat
-        main_type = get_main_meal_type(week, day_index)
-        total += get_meal_price(week, day_index, main_type)
-        total += get_meal_price(week, day_index, "dinner")
+def weekly_cost(week):
+    total = 0
+    for d in range(6):
+        total += get_price(week, d, get_main_type(week, d))
+        total += get_price(week, d, "dinner")
     return total
 
+def sunday_cost_all():
+    return sum(get_price(w, 6, "lunch") + get_price(w, 6, "dinner") for w in range(1, 5))
 
-def sunday_cost_for(week: int) -> float:
-    return get_meal_price(week, 6, "lunch") + get_meal_price(week, 6, "dinner")
+def weekdays_cost_all():
+    total = 0
+    for w in range(1, 5):
+        total += weekly_cost(w)
+    return total
 
-
-def format_difference(cost: float, budget: float) -> str:
+def format_diff(cost, budget):
     diff = budget - cost
     if abs(diff) < 1e-9:
         return ""
     sign = "+" if diff > 0 else ""
-    word = "under" if diff > 0 else "over"
-    return f"{sign}{diff:.2f} {word} budget"
+    color = "budget-diff-positive" if diff > 0 else "budget-diff-negative"
+    return f"<span class='{color}'>({sign}{diff:.2f})</span>"
 
 
 # =========================
-#  Session state init
+#  Session state
 # =========================
 
 if "selected_week" not in st.session_state:
     st.session_state.selected_week = 1
 
-if "day_meal_choices" not in st.session_state:
-    st.session_state.day_meal_choices = {}
+if "day_meal_choice" not in st.session_state:
+    st.session_state.day_meal_choice = {}
 
-if "budgets_initialized" not in st.session_state:
+if "budgets_init" not in st.session_state:
     for k, v in DEFAULT_BUDGETS.items():
-        st.session_state[f"budget-{k}"] = float(v)
-    st.session_state.budgets_initialized = True
+        st.session_state[f"budget-{k}"] = v
+    st.session_state.budgets_init = True
 
 # =========================
-#  Top title
+#  Title
 # =========================
 
 st.markdown("<div class='mealsync-title'>MealSync</div>", unsafe_allow_html=True)
-st.markdown(
-    "<div class='mealsync-subtitle'>Your weekly meal planning, simplified.</div>",
-    unsafe_allow_html=True,
-)
+st.markdown("<div class='mealsync-subtitle'>Your weekly meal planning, simplified.</div>", unsafe_allow_html=True)
 
 # =========================
-#  Week selector row
+#  Week selector
 # =========================
 
-week_row = st.container()
-with week_row:
-    cols = st.columns(4, gap="small")
-    st.markdown("<div class='week-buttons'></div>", unsafe_allow_html=True)
-    for i, col in enumerate(cols, start=1):
-        with col:
-            kind = "primary" if st.session_state.selected_week == i else "secondary"
-            if st.button(
-                f"Week {i}",
-                key=f"week-btn-{i}",
-                type=kind,
-            ):
-                st.session_state.selected_week = i
-                st.rerun()
+st.markdown("<div class='week-buttons'></div>", unsafe_allow_html=True)
+week_cols = st.columns(4)
+for i, col in enumerate(week_cols, start=1):
+    with col:
+        clicked = st.button(
+            f"Week {i}",
+            key=f"wk{i}",
+            type=("primary" if st.session_state.selected_week == i else "secondary")
+        )
+        if clicked:
+            st.session_state.selected_week = i
+            st.rerun()
 
-selected_week = st.session_state.selected_week
-
+week = st.session_state.selected_week
 st.markdown("---")
 
 # =========================
-#  Day cards
+#  Main day grid
 # =========================
 
-day_cols = st.columns([1, 1, 1, 1, 1.2])  # last column for budgets card
+day_cols = st.columns([1,1,1,1,1.2])
 
-for day_index in range(7):
-    col_index = day_index if day_index < 4 else day_index - 4
+for day in range(7):
+    col_index = day if day < 4 else day - 4
     col = day_cols[col_index]
 
-    is_sunday = (day_index == 6)
-    icon_day = ""  # you can add a small icon to header if you want
-    day_label = WEEK_DAYS[day_index]
-
     with col:
-        # Open card
-        header_class = "day-header sunday" if is_sunday else "day-header"
         st.markdown(
-            f"<div class='day-card'>"
-            f"<div class='{header_class}'>{day_label}</div>",
+            f"<div class='day-card'><div class='day-header {'sunday' if day==6 else ''}'>{WEEK_DAYS[day]}</div>",
             unsafe_allow_html=True,
         )
 
-        # Breakfast/lunch toggle (Mon–Sat)
-        if not is_sunday:
-            key = get_meal_key(selected_week, day_index)
-            current_choice: MealType = st.session_state.day_meal_choices.get(
-                key, "breakfast"
+        # Toggle (Mon–Sat)
+        if day != 6:
+            key = get_meal_key(week, day)
+            current = st.session_state.day_meal_choice.get(key, "breakfast")
+            icon = "☕" if current == "breakfast" else "🍛"
+            label = (
+                f"{icon} Breakfast → switch to Lunch"
+                if current == "breakfast"
+                else f"{icon} Lunch → switch to Breakfast"
             )
-            icon = "☕" if current_choice == "breakfast" else "🍛"
-            toggle_label = (
-                f"{icon}  Breakfast → tap to show Lunch"
-                if current_choice == "breakfast"
-                else f"{icon}  Lunch → tap to show Breakfast"
-            )
-            if st.button(
-                toggle_label,
-                key=f"toggle-{selected_week}-{day_index}",
-            ):
-                new_choice = "lunch" if current_choice == "breakfast" else "breakfast"
-                st.session_state.day_meal_choices[key] = new_choice
+            if st.button(label, key=f"tgl-{week}-{day}"):
+                st.session_state.day_meal_choice[key] = "lunch" if current == "breakfast" else "breakfast"
                 st.rerun()
 
-        # Meal select boxes
-        if is_sunday:
-            main_meal_types: List[MealType] = ["lunch", "dinner"]
-        else:
-            main_meal_types = [get_main_meal_type(selected_week, day_index), "dinner"]
+        meal_types = ["lunch","dinner"] if day == 6 else [get_main_type(week, day), "dinner"]
 
-        for meal_type in main_meal_types:
-            pretty = meal_type.capitalize()
-            icon = "☕" if meal_type == "breakfast" else ("☀️" if meal_type == "lunch" else "🌙")
-            st.markdown(
-                f"<div class='meal-label'>{icon} {pretty}</div>",
-                unsafe_allow_html=True,
-            )
+        for mt in meal_types:
+            icon = "☕" if mt=="breakfast" else ("☀️" if mt=="lunch" else "🌙")
+            st.markdown(f"<div class='meal-label'>{icon} {mt.capitalize()}</div>", unsafe_allow_html=True)
 
-            options_meals = get_options_for_meal_type(
-                meal_type, selected_week, day_index
-            )
+            select_key = f"sel-{week}-{day}-{mt}"
 
-            option_values = ["skip"] + [m.id for m in options_meals] + ["custom"]
-            labels = {
-                "skip": "Skip this meal",
-                "custom": "Custom meal (enter price)",
-            }
-            for m in options_meals:
-                labels[m.id] = f"{m.name} (Rs. {m.price:.2f})"
-
-            select_key = f"sel-w{selected_week}-d{day_index}-{meal_type}"
-
-            # Initial default
             if select_key not in st.session_state:
-                default_val = "skip"
-                if meal_type == "breakfast":
-                    default_meal = get_default_meal_for(selected_week, day_index)
-                    if default_meal:
-                        default_val = default_meal.id
-                st.session_state[select_key] = default_val
+                default = "skip"
+                if mt == "breakfast":
+                    d = get_default_meal(week, day)
+                    if d:
+                        default = d.id
+                st.session_state[select_key] = default
+
+            options = ["skip"] + [m.id for m in get_meals(mt, week, day)] + ["custom"]
+            labels = {
+                "skip": "Skip meal",
+                "custom": "Custom price"
+            }
+            for m in get_meals(mt, week, day):
+                labels[m.id] = f"{m.name} (Rs. {m.price})"
 
             choice = st.selectbox(
-                " ",
-                option_values,
-                key=select_key,
-                format_func=lambda v: labels[v],
-                label_visibility="collapsed",
+                "",
+                options,
+                format_func=lambda x: labels[x],
+                key=select_key
             )
 
             if choice == "custom":
-                price_key = f"price-w{selected_week}-d{day_index}-{meal_type}"
-                if price_key not in st.session_state:
-                    st.session_state[price_key] = 0.0
-                st.number_input(
-                    "Custom price (Rs.)",
-                    min_value=0.0,
-                    step=1.0,
-                    key=price_key,
-                    label_visibility="collapsed",
-                )
+                pk = f"price-{week}-{day}-{mt}"
+                if pk not in st.session_state:
+                    st.session_state[pk] = 0
+                st.number_input("Custom price", min_value=0.0, key=pk, label_visibility="collapsed")
 
-        # Close card
         st.markdown("</div>", unsafe_allow_html=True)
 
 # =========================
-#  Budgets card (right-most column)
+#  Budgets card
 # =========================
 
 with day_cols[-1]:
     st.markdown("<div class='budgets-card'>", unsafe_allow_html=True)
     st.markdown("<div class='budgets-card-title'>Budgets</div>", unsafe_allow_html=True)
 
-    budget_labels = {
+    labels = {
         "weekly": "Week Total",
         "sunday": "Sunday Total",
         "weekdays": "Weekdays Total",
         "grandTotal": "Grand Total",
     }
 
-        for key, label in budget_labels.items():
-        c1, c2 = st.columns([2, 1])
+    for key, label in labels.items():
+        c1, c2 = st.columns([2,1])
         with c1:
-            st.markdown(
-                f"<div class='budget-label'>{label}</div>",
-                unsafe_allow_html=True,
-            )
-            # Let the widget use the existing session_state value;
-            # we don't pass `value=` here.
+            st.markdown(f"<div class='budget-label'>{label}</div>", unsafe_allow_html=True)
             st.number_input(
                 "Budget (Rs.)",
                 min_value=0.0,
@@ -497,54 +417,38 @@ with day_cols[-1]:
             )
         with c2:
             if st.button("Default", key=f"reset-{key}"):
-                # Reset this budget to its default and rerun
                 st.session_state[f"budget-{key}"] = DEFAULT_BUDGETS[key]
                 st.rerun()
 
     st.markdown("</div>", unsafe_allow_html=True)
 
 # =========================
-#  Cost summary card
+#  Summary card
 # =========================
 
-budgets = {
-    k: float(st.session_state[f"budget-{k}"])
-    for k in DEFAULT_BUDGETS.keys()
-}
+bud = {k: float(st.session_state[f"budget-{k}"]) for k in DEFAULT_BUDGETS}
 
-weekly_cost = weekly_cost_for(selected_week)
-sunday_total = sum(sunday_cost_for(week) for week in range(1, 5))
-weekdays_total = sum(weekly_cost_for(week) for week in range(1, 5))
-grand_total = sunday_total + weekdays_total
+wk_cost = weekly_cost(week)
+sun_cost = sunday_cost_all()
+wd_cost = weekdays_cost_all()
+grand_cost = sun_cost + wd_cost
 
 st.markdown("")
-summary_col = st.container()
-with summary_col:
-    st.markdown("<div class='summary-card'>", unsafe_allow_html=True)
-    st.markdown("<div class='summary-card-title'>Cost Summary</div>", unsafe_allow_html=True)
+st.markdown("<div class='summary-card'>", unsafe_allow_html=True)
+st.markdown("<div class='summary-card-title'>Cost Summary</div>", unsafe_allow_html=True)
 
-    def row(label, value, budget_key):
-        diff_text = format_difference(value, budgets[budget_key])
-        diff_class = ""
-        if diff_text != "":
-            diff_class = (
-                "budget-diff-positive"
-                if "under" in diff_text
-                else "budget-diff-negative"
-            )
-        st.markdown(
-            f"<div class='summary-row'>"
-            f"<span class='summary-label'>{label}</span>"
-            f"<span class='summary-value summary-accent'>Rs. {value:.2f}"
-            f"{'' if diff_text == '' else f' <span class=\"{diff_class}\">({diff_text})</span>'}"
-            f"</span></div>",
-            unsafe_allow_html=True,
-        )
+def row(lbl, val, budget_key):
+    diff = format_diff(val, bud[budget_key])
+    st.markdown(
+        f"<div class='summary-row'><span>{lbl}</span>"
+        f"<span class='summary-value'>Rs. {val:.2f} {diff}</span></div>",
+        unsafe_allow_html=True,
+    )
 
-    row("Current Week Total:", weekly_cost, "weekly")
-    row("Sunday Total:", sunday_total, "sunday")
-    st.markdown("<hr/>", unsafe_allow_html=True)
-    row("Weekdays Total:", weekdays_total, "weekdays")
-    row("Grand Total:", grand_total, "grandTotal")
+row("Current Week Total:", wk_cost, "weekly")
+row("Sunday Total:", sun_cost, "sunday")
+st.markdown("<hr/>", unsafe_allow_html=True)
+row("Weekdays Total:", wd_cost, "weekdays")
+row("Grand Total:", grand_cost, "grandTotal")
 
-    st.markdown("</div>", unsafe_allow_html=True)
+st.markdown("</div>", unsafe_allow_html=True)
