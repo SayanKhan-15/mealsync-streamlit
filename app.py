@@ -66,7 +66,7 @@ html = r"""
       border:1px solid rgba(31,41,55,0.9);
       padding: 14px;
       box-sizing:border-box;
-      height: 260px;           /* equal height for all 8 cards */
+      height: 320px;           /* increased so Budgets fits fully */
     }
 
     .day-header {
@@ -217,16 +217,23 @@ const specialBreakfastMap = {
 };
 const breakfastAll = [...breakfastBase, BF_PAV, BF_MAGGI, BF_ALU, BF_MAC, BF_DAAL];
 
-const lunchOptions = [ {id:'l-biryani', name:'Biryani', price:85}, {id:'l-sambar', name:'Sambar rice', price:57} ];
+const lunchOptions = [
+  {id:'l-biryani',  name:'Biryani',      price:85},
+  {id:'l-sambar',   name:'Sambar rice',  price:57}
+];
 const dinnerOptions = [
-  {id:'d-dosa', name:'Dosa', price:48}, {id:'d-fish', name:'Fish', price:90}, {id:'d-veg', name:'Veg', price:95},
-  {id:'d-chicken', name:'Chicken', price:110}, {id:'d-mushroom', name:'Mushroom', price:80}, {id:'d-biryani', name:'Biryani', price:131}
+  {id:'d-dosa',     name:'Dosa',     price:48},
+  {id:'d-fish',     name:'Fish',     price:90},
+  {id:'d-veg',      name:'Veg',      price:95},
+  {id:'d-chicken',  name:'Chicken',  price:110},
+  {id:'d-mushroom', name:'Mushroom', price:80},
+  {id:'d-biryani',  name:'Biryani',  price:131}
 ];
 
 const DEFAULT_BUDGETS = { weekly:840, sunday:2140, weekdays:3360, grandTotal:5500 };
 const WEEK_DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
-/* ---------- State management (localStorage) ---------- */
+/* ---------- State ---------- */
 function loadState(){
   const raw = localStorage.getItem('mealsync_state');
   if(raw){
@@ -247,7 +254,6 @@ function loadState(){
 }
 function saveState(){ localStorage.setItem('mealsync_state', JSON.stringify(state)); }
 
-/* ---------- Helpers ---------- */
 function priceForSelection(mealType, sel, week, day){
   if(sel==='skip') return 0;
   if(sel==='custom'){
@@ -266,15 +272,12 @@ function getBreakfastConfig(week, dayIndex){
   return { defaultId: null, options: breakfastBase };
 }
 function createMealIcon(kind){
-  let svg = '';
   if(kind === 'breakfast'){
-    svg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h13a3 3 0 0 0 0-6H4v6z"/><path d="M17 4v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V4"/><line x1="6" y1="18" x2="16" y2="18"/><line x1="8" y1="22" x2="14" y2="22"/></svg>';
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h13a3 3 0 0 0 0-6H4v6z"/><path d="M17 4v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V4"/><line x1="6" y1="18" x2="16" y2="18"/><line x1="8" y1="22" x2="14" y2="22"/></svg>';
   } else if(kind === 'lunch'){
-    svg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.07" y2="4.93"/></svg>';
-  } else {
-    svg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.07" y2="4.93"/></svg>';
   }
-  return svg;
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
 }
 function diffHtml(cost, budgetVal){
   const b = parseFloat(budgetVal);
@@ -466,12 +469,17 @@ function makeGrid(){
       totalRow.appendChild(totalLabel); totalRow.appendChild(totalVal);
       card.appendChild(totalRow);
 
-      // visible labels
       function labelForSelection(sel, type){
         if(sel==='skip') return 'Not planned';
-        if(sel==='custom'){ const pk=`price-${week}-${day}-${type}`; const v=(state.weeks[week][pk]||'0').trim(); const n=parseFloat(v); return 'Custom (₹ '+(isNaN(n)?v:n.toFixed(2))+')'; }
+        if(sel==='custom'){
+          const pk=`price-${week}-${day}-${type}`;
+          const v=(state.weeks[week][pk]||'0').trim();
+          const n=parseFloat(v);
+          return 'Custom (₹ '+(isNaN(n)?v:n.toFixed(2))+')';
+        }
         const list = (type==='breakfast') ? breakfastAll : (type==='lunch' ? lunchOptions : dinnerOptions);
-        const found = list.find(x=>x.id===sel); return found ? `${found.name} (₹ ${found.price.toFixed(2)})` : 'Not planned';
+        const found = list.find(x=>x.id===sel);
+        return found ? `${found.name} (₹ ${found.price.toFixed(2)})` : 'Not planned';
       }
       mainLabel.textContent = labelForSelection(mainSelVal, mainType);
       if(mainSelVal==='skip') mainLabel.classList.add('muted');
@@ -516,7 +524,7 @@ function makeGrid(){
   saveState();
 }
 
-/* ---------- Summary & calc ---------- */
+/* ---------- Summary ---------- */
 function updateSummary(){
   const week = state.selectedWeek;
   let curWeek = 0;
@@ -563,6 +571,7 @@ function updateSummary(){
 }
 
 /* ---------- Init ---------- */
+const state = loadState();
 function ensureStructure(){
   for(let w=1; w<=4; w++){ if(!state.weeks[w]) state.weeks[w] = {}; }
   if(!state.budgets) state.budgets = {};
