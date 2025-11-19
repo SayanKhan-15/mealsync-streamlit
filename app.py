@@ -313,6 +313,18 @@ function createMealIcon(kind){
   return span;
 }
 
+/* ---------- Diff helper (used in summary + per-day) ---------- */
+function diffHtml(cost, budgetVal){
+  const b = parseFloat(budgetVal);
+  if(isNaN(b)) return '';
+  const diff = b - cost;
+  if(Math.abs(diff) < 0.005) return '';
+  const abs = Math.abs(diff).toFixed(2);
+  const text = diff > 0 ? `+ ${abs}` : `- ${abs}`;
+  const cls = diff > 0 ? 'diff-pos' : 'diff-neg';
+  return ` <span class="${cls}">(${text})</span>`;
+}
+
 /* ---------- Rendering ---------- */
 const state = loadState();
 
@@ -477,6 +489,31 @@ function makeGrid(){
         card.appendChild(input);
       }
 
+      /* ---- DAY TOTAL ROW ---- */
+      let dayTotal = 0;
+      const mainSel = state.weeks[week][mainSelKey] || 'skip';
+      dayTotal += priceForSelection(mainType, mainSel, week, day);
+      const dSel = state.weeks[week][dinnerKey] || 'skip';
+      dayTotal += priceForSelection('dinner', dSel, week, day);
+
+      const dayLimit = (day === 6) ? 535 : 140; // Sun vs Mon–Sat
+
+      const totalRow = document.createElement('div');
+      totalRow.style.display = 'flex';
+      totalRow.style.justifyContent = 'space-between';
+      totalRow.style.marginTop = '6px';
+      totalRow.style.fontSize = '13px';
+
+      const totalLabel = document.createElement('div');
+      totalLabel.textContent = 'Day total:';
+
+      const totalVal = document.createElement('div');
+      totalVal.innerHTML = '₹ ' + dayTotal.toFixed(2) + diffHtml(dayTotal, dayLimit);
+
+      totalRow.appendChild(totalLabel);
+      totalRow.appendChild(totalVal);
+      card.appendChild(totalRow);
+
     } else {
       /* Budgets card */
       const hdr = document.createElement('div'); hdr.className='day-header';
@@ -528,17 +565,6 @@ function makeGrid(){
 }
 
 /* ---------- Summary/calculation with coloured diff ---------- */
-function diffHtml(cost, budgetVal){
-  const b = parseFloat(budgetVal);
-  if(isNaN(b)) return '';
-  const diff = b - cost;
-  if(Math.abs(diff) < 0.005) return '';
-  const abs = Math.abs(diff).toFixed(2);
-  const text = diff > 0 ? `+ ${abs}` : `- ${abs}`;
-  const cls = diff > 0 ? 'diff-pos' : 'diff-neg';
-  return ` <span class="${cls}">(${text})</span>`;
-}
-
 function updateSummary(){
   const week = state.selectedWeek;
   let curWeek = 0;
