@@ -1,493 +1,460 @@
 import streamlit as st
-from dataclasses import dataclass
-from typing import List, Literal, Optional
+import streamlit.components.v1 as components
 
-# -------------------------
-# Page config & CSS
-# -------------------------
 st.set_page_config(page_title="MealSync", layout="wide")
 
-st.markdown(
-    """
-<style>
-/* Page background */
-body {
-  background: linear-gradient(180deg, #020617 0%, #020617 60%, #000000 100%);
-  color: #e5e7eb;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-}
+html = r"""
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>MealSync - Embedded UI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root{
+      --bg:#0b1116;
+      --card:#0d1620;
+      --muted:#9fb6c9;
+      --accent:#60a5fa;
+      --accent2:#7c3aed;
+      --frame: rgba(148,163,184,0.45);
+      --green:#4ade80;
+      --red:#fb7185;
+      --text:#e6eef8;
+      --card-padding:12px;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    html,body { height:100%; margin:0; padding:0; background: linear-gradient(180deg,#020617 0%, #070b10 100%); color:var(--text); }
+    .container { max-width:1200px; margin:18px auto; padding:18px; }
+    h1 { text-align:center; color:var(--accent); font-size:36px; margin:0 0 6px 0; }
+    p.subtitle { text-align:center; color: #9aaec0; margin:0 0 18px 0; }
 
-/* Container padding */
-section.main > div.block-container {
-  padding-top: 0.75rem;
-  padding-bottom: 1rem;
-}
+    .week-row { display:flex; justify-content:center; gap:16px; margin:18px 0 18px 0; flex-wrap:wrap; }
+    .week-btn { padding:8px 14px; border-radius:18px; border:1px solid rgba(255,255,255,0.04); background: rgba(255,255,255,0.02); color:var(--text); cursor:pointer; }
+    .week-btn.active { background: linear-gradient(135deg,var(--accent),var(--accent2)); color:white; border-color:transparent; }
 
-/* Title */
-.app-title {
-  font-size: 2.3rem;
-  font-weight: 800;
-  color: #7dd3fc;
-  text-align: center;
-  margin-bottom: 0.1rem;
-}
-.app-sub {
-  text-align: center;
-  color: #9ca3af;
-  margin-bottom: 0.75rem;
-}
+    /* 2x4 grid */
+    .grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-top:8px; }
+    @media (max-width: 900px){ .grid { grid-template-columns:repeat(2,1fr);} }
 
-/* Week buttons row */
-div.week-buttons > div.stButton > button {
-  border-radius: 999px !important;
-  padding: 6px 10px !important;
-  font-size: 0.84rem !important;
-  background: rgba(15,23,42,0.85) !important;
-  color: #e5e7eb !important;
-  border: 1px solid rgba(148,163,184,0.5) !important;
-  white-space: nowrap !important;
-}
-div.week-buttons > div.stButton > button[kind="primary"] {
-  background: linear-gradient(135deg,#2563eb,#7c3aed) !important;
-  border-color: transparent !important;
-  color: #fff !important;
-}
+    /* card frames */
+    .card {
+      background: var(--card);
+      border-radius:10px;
+      border: 1px solid var(--frame);
+      padding: var(--card-padding);
+      box-sizing:border-box;
+      min-height: 120px;
+    }
 
-/* Generic buttons (toggle, Default) */
-div.stButton > button {
-  border-radius: 999px;
-  padding: 4px 10px;
-  font-size: 0.8rem;
-  background-color: rgba(15,23,42,0.9);
-  color: #e5e7eb;
-  border: 1px solid rgba(148,163,184,0.5);
-  white-space: nowrap;
-  min-width: 72px;
-}
+    .day-header {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:8px;
+    }
+    .day-title { font-weight:700; color:var(--text); font-size:16px; }
+    .day-title.sunday { color:#ffd6d8; }
 
-/* === DAY CARD ===
-   One rectangular border that contains the
-   day heading + toggle + meal options.
+    .toggle-btn { padding:6px 10px; border-radius:18px; border:1px solid rgba(255,255,255,0.04); background: rgba(255,255,255,0.02); cursor:pointer; font-size:13px; }
+
+    .section-label { font-size:12px; color:var(--muted); margin:8px 0 6px 0; text-transform:uppercase; letter-spacing:0.06em; }
+
+    select, input[type="text"] {
+      width:100%;
+      padding:10px 12px;
+      border-radius:8px;
+      background: rgba(0,0,0,0.35);
+      border:1px solid rgba(255,255,255,0.03);
+      color:var(--text);
+      box-sizing:border-box;
+      font-size:14px;
+    }
+
+    .budget-row { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+    .budget-row .btn { padding:6px 10px; border-radius:10px; border:1px solid rgba(255,255,255,0.04); background: rgba(255,255,255,0.02); cursor:pointer; min-width:72px; white-space:nowrap; }
+    .budget-row .label { font-size:13px; color:var(--muted); margin-bottom:4px; }
+
+    .summary { margin-top:16px; border-radius:8px; padding:12px; background: rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.03); }
+    .summary-row { display:flex; justify-content:space-between; margin-bottom:8px; }
+    .summary-row .val { font-weight:700; color:#bfe6ff; }
+
+    /* small helpers */
+    .muted { color:var(--muted); font-size:13px; }
+    .diff-pos { color:var(--green); font-weight:600; }
+    .diff-neg { color:var(--red); font-weight:600; }
+
+    /* make inputs not show spinner on number type when used */
+    input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>MealSync</h1>
+  <p class="subtitle">Your weekly meal planning, simplified.</p>
+
+  <div class="week-row" id="weekRow"></div>
+
+  <div style="height:10px;"></div>
+
+  <div class="grid" id="grid"></div>
+
+  <div style="height:12px;"></div>
+
+  <div class="summary" id="summary">
+    <div style="font-weight:700; margin-bottom:8px;">Cost Summary</div>
+    <div class="summary-row"><div>Current Week Total:</div><div class="val" id="curWeekVal">Rs. 0.00</div></div>
+    <div class="summary-row"><div>Sunday Total:</div><div class="val" id="sunTotalVal">Rs. 0.00</div></div>
+    <hr style="border-color:rgba(255,255,255,0.04)"/>
+    <div class="summary-row"><div>Weekdays Total:</div><div class="val" id="wdTotalVal">Rs. 0.00</div></div>
+    <div class="summary-row"><div>Grand Total:</div><div class="val" id="grandVal">Rs. 0.00</div></div>
+  </div>
+
+</div>
+
+<script>
+/* ---------- Data ---------- */
+const breakfastOptions = [
+  {id:'medu', name:'Medu vada', price:20},
+  {id:'pongal', name:'Pongal', price:25},
+  {id:'sambar', name:'Sambar vada', price:32},
+  {id:'curd', name:'Curd vada', price:32},
+  {id:'pav', name:'Pav bhaji', price:38},
+  {id:'alu', name:'Alu paratha', price:38},
+  {id:'mac', name:'Macaroni', price:38},
+  {id:'daal', name:'Daal poori', price:38}
+];
+const lunchOptions = [
+  {id:'l1', name:'Mess Lunch', price:60},
+  {id:'l2', name:'Special Lunch', price:80}
+];
+const dinnerOptions = [
+  {id:'d1', name:'Mess Dinner', price:60},
+  {id:'d2', name:'Special Dinner', price:80}
+];
+
+const DEFAULTS = [
+  {week:1, day:2, meal_name:'Pav bhaji'},
+  {week:3, day:3, meal_name:'Pav bhaji'},
+  {week:1, day:4, meal_name:'Maggi'},
+  {week:1, day:6, meal_name:'Alu paratha'},
+  {week:4, day:4, meal_name:'Alu paratha'},
+  {week:2, day:4, meal_name:'Macaroni'},
+  {week:2, day:5, meal_name:'Macaroni'},
+  {week:4, day:6, meal_name:'Daal poori'}
+];
+
+const DEFAULT_BUDGETS = {
+  weekly:840, sunday:2140, weekdays:3360, grandTotal:5500
+};
+
+const WEEK_DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+/* ---------- State ---------- 
+ We'll store everything in localStorage under "mealsync_state"
+ Structure:
+ {
+   selectedWeek: 1..4,
+   weeks: { "1": { "w0-d0": {main:'medu', dinner:'d1', ...}, ... }, "2": {...} ... },
+   dayChoice: { "1-w0": "breakfast" or "lunch", ... },
+   budgets: { weekly: "840.00", sunday: "2140.00", ... }  // strings
+ }
 */
-.day-card {
-  border: 1px solid rgba(148,163,184,0.7);
-  border-radius: 8px;
-  padding: 8px 10px;
-  margin: 2px 0;
-  background-color: rgba(15,23,42,0.9);
+function loadState(){
+  const raw = localStorage.getItem('mealsync_state');
+  if(raw) try { return JSON.parse(raw); } catch(e){}
+  // new state
+  const s = { selectedWeek:1, weeks:{}, dayChoice:{}, budgets:{} };
+  for(let w=1;w<=4;w++) s.weeks[w] = {};
+  // init budgets as strings
+  for(const k in DEFAULT_BUDGETS) s.budgets[k] = DEFAULT_BUDGETS[k].toFixed(2);
+  localStorage.setItem('mealsync_state', JSON.stringify(s));
+  return s;
+}
+function saveState(){ localStorage.setItem('mealsync_state', JSON.stringify(state)); }
+
+/* ---------- Helper utilities ---------- */
+function priceForSelection(mealType, sel, week, day){
+  if(sel==='skip') return 0;
+  if(sel==='custom'){
+    const key = `price-${week}-${day}-${mealType}`;
+    const v = state.weeks[week][key];
+    return parseFloat(v || 0) || 0;
+  }
+  const list = mealType==='breakfast' ? breakfastOptions : (mealType==='lunch' ? lunchOptions : dinnerOptions);
+  const found = list.find(x=>x.id===sel);
+  return found ? found.price : 0;
+}
+function getDefaultFor(week, day){
+  const dd = DEFAULTS.find(d=>d.week===week && d.day===day+1);
+  if(!dd) return null;
+  const name = dd.meal_name.toLowerCase();
+  return breakfastOptions.find(b=>b.name.toLowerCase()===name) || null;
 }
 
-/* Remove extra top-gap that Streamlit adds before first element inside card */
-.day-card > .stMarkdown:first-of-type {
-  margin-top: 0 !important;
+/* ---------- Rendering ---------- */
+const state = loadState();
+
+function makeWeekButtons(){
+  const wr = document.getElementById('weekRow');
+  wr.innerHTML = '';
+  for(let i=1;i<=4;i++){
+    const b = document.createElement('button');
+    b.className = 'week-btn' + (state.selectedWeek===i ? ' active' : '');
+    b.innerText = 'Week '+i;
+    b.onclick = ()=>{ state.selectedWeek = i; saveState(); makeGrid(); makeWeekButtons(); updateSummary(); }
+    wr.appendChild(b);
+  }
 }
 
-/* Day heading text (inside the card, no separate box) */
-.day-heading {
-  font-weight: 700;
-  font-size: 1.0rem;
-  margin: 0 0 4px 0;
-  color: #e0f2fe;
+function makeGrid(){
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  const week = state.selectedWeek;
+
+  // create 8 cells (7 days + 1 budgets)
+  for(let cell=0; cell<8; cell++){
+    const card = document.createElement('div');
+    card.className = 'card';
+    if(cell<7){
+      const day = cell;
+      // header row
+      const hdr = document.createElement('div'); hdr.className='day-header';
+      const title = document.createElement('div'); title.className='day-title';
+      title.innerText = WEEK_DAYS[day];
+      if(day===6) title.className += ' sunday';
+      hdr.appendChild(title);
+
+      // toggle button (only Mon-Sat)
+      if(day!==6){
+        const key = `${week}-w${day}`;
+        if(!state.dayChoice[key]) state.dayChoice[key]='breakfast';
+        const tbtn = document.createElement('button');
+        tbtn.className='toggle-btn';
+        tbtn.innerText = (state.dayChoice[key]==='breakfast' ? '☕ Breakfast — click to switch' : '🍛 Lunch — click to switch');
+        tbtn.onclick = ()=>{
+          state.dayChoice[key] = (state.dayChoice[key]==='breakfast' ? 'lunch' : 'breakfast');
+          saveState();
+          makeGrid();
+          updateSummary();
+        };
+        hdr.appendChild(tbtn);
+      }
+      card.appendChild(hdr);
+
+      // now inside the same card: sections for main meal and dinner
+      const mainType = (day===6) ? 'lunch' : state.dayChoice[`${week}-w${day}`] || 'breakfast';
+
+      // MAIN meal
+      const mainLabel = document.createElement('div'); mainLabel.className='section-label'; mainLabel.innerText = mainType.toUpperCase();
+      card.appendChild(mainLabel);
+
+      const mainSelect = document.createElement('select');
+      const mainSelKey = `sel-${week}-${day}-${mainType}`;
+      // ensure entry exists
+      if(!state.weeks[week][mainSelKey]) {
+        // set default (for breakfast maybe default meal)
+        let def = 'skip';
+        if(mainType==='breakfast'){
+          const d = getDefaultFor(week, day);
+          if(d) def = d.id;
+        }
+        state.weeks[week][mainSelKey] = def;
+        saveState();
+      }
+      // options
+      const opts = (mainType==='breakfast') ? breakfastOptions : (mainType==='lunch' ? lunchOptions : dinnerOptions);
+      mainSelect.innerHTML = '';
+      const addOption = (value, label) => {
+        const o = document.createElement('option'); o.value=value; o.innerText=label; if(state.weeks[week][mainSelKey]===value) o.selected = true; mainSelect.appendChild(o);
+      };
+      addOption('skip','Skip this meal');
+      opts.forEach(m => addOption(m.id, `${m.name} (Rs. ${m.price.toFixed(2)})`));
+      addOption('custom','Custom price (type Rs.)');
+      mainSelect.onchange = (e)=>{
+        state.weeks[week][mainSelKey] = e.target.value;
+        // if custom, create price key with default 0
+        if(e.target.value==='custom'){
+          const pk = `price-${week}-${day}-${mainType}`;
+          if(!(pk in state.weeks[week])) state.weeks[week][pk] = '0';
+        }
+        saveState();
+        makeGrid();
+        updateSummary();
+      };
+      card.appendChild(mainSelect);
+
+      // custom price input if needed
+      if(state.weeks[week][mainSelKey] === 'custom') {
+        const pk = `price-${week}-${day}-${mainType}`;
+        if(!(pk in state.weeks[week])) state.weeks[week][pk] = '0';
+        const input = document.createElement('input');
+        input.type='text'; input.value = state.weeks[week][pk];
+        input.oninput = (e)=>{
+          state.weeks[week][pk] = e.target.value;
+          saveState();
+          updateSummary();
+        };
+        card.appendChild(input);
+      }
+
+      // DINNER
+      const dinnerLabel = document.createElement('div'); dinnerLabel.className='section-label'; dinnerLabel.innerText = 'dinner'.toUpperCase();
+      card.appendChild(dinnerLabel);
+      const dinnerKey = `sel-${week}-${day}-dinner`;
+      if(!state.weeks[week][dinnerKey]) state.weeks[week][dinnerKey] = 'skip';
+      const dinnerSelect = document.createElement('select');
+      dinnerSelect.innerHTML = '';
+      const addD = (v,l)=>{ const o=document.createElement('option'); o.value=v; o.innerText=l; if(state.weeks[week][dinnerKey]===v) o.selected=true; dinnerSelect.appendChild(o); };
+      addD('skip','Skip this meal');
+      dinnerOptions.forEach(m => addD(m.id, `${m.name} (Rs. ${m.price.toFixed(2)})`));
+      addD('custom','Custom price (type Rs.)');
+      dinnerSelect.onchange = (e)=>{
+        state.weeks[week][dinnerKey] = e.target.value;
+        if(e.target.value==='custom'){
+          const pk=`price-${week}-${day}-dinner`;
+          if(!(pk in state.weeks[week])) state.weeks[week][pk] = '0';
+        }
+        saveState();
+        makeGrid();
+        updateSummary();
+      };
+      card.appendChild(dinnerSelect);
+
+      if(state.weeks[week][dinnerKey] === 'custom'){
+        const pk=`price-${week}-${day}-dinner`;
+        if(!(pk in state.weeks[week])) state.weeks[week][pk]='0';
+        const input = document.createElement('input'); input.type='text'; input.value= state.weeks[week][pk];
+        input.oninput=(e)=>{ state.weeks[week][pk]=e.target.value; saveState(); updateSummary(); };
+        card.appendChild(input);
+      }
+
+    } else {
+      // budgets card (cell 7)
+      const hdr = document.createElement('div'); hdr.className='day-header';
+      const title = document.createElement('div'); title.className='day-title'; title.innerText='Budgets';
+      hdr.appendChild(title);
+      card.appendChild(hdr);
+
+      // Budget rows: Default button left, input right
+      const keys = [
+        {k:'weekly', label:'Week Total'},
+        {k:'sunday', label:'Sunday Total (all 4 weeks)'},
+        {k:'weekdays', label:'Weekdays Total (all 4 weeks)'},
+        {k:'grandTotal', label:'Grand Total'}
+      ];
+      keys.forEach(item=>{
+        // row container
+        const row = document.createElement('div'); row.className='budget-row';
+        // button
+        const btn = document.createElement('button'); btn.className='btn'; btn.innerText='Default';
+        btn.onclick = ()=>{
+          state.budgets[item.k] = DEFAULT_BUDGETS[item.k].toFixed(2);
+          saveState();
+          makeGrid();
+          updateSummary();
+        };
+        row.appendChild(btn);
+        // right column with label+input
+        const right = document.createElement('div'); right.style.flex='1';
+        const lab = document.createElement('div'); lab.className='label'; lab.innerText = item.label;
+        lab.style.marginBottom='6px';
+        right.appendChild(lab);
+        const key = `budget-${item.k}`;
+        if(!(key in state.budgets)) state.budgets[item.k] = DEFAULT_BUDGETS[item.k].toFixed(2);
+        const inp = document.createElement('input'); inp.type='text'; inp.value=state.budgets[item.k];
+        inp.oninput = (e)=>{ state.budgets[item.k] = e.target.value; saveState(); updateSummary(); };
+        right.appendChild(inp);
+        row.appendChild(right);
+        card.appendChild(row);
+      });
+    }
+
+    grid.appendChild(card);
+  }
+
+  saveState();
 }
-.day-heading.sunday {
-  color: #fecaca;
+
+/* ---------- Summary/calculation ---------- */
+function updateSummary(){
+  // Current week total: sum mon-sat main + dinner for selectedWeek
+  const week = state.selectedWeek;
+  let curWeek = 0;
+  for(let d=0; d<6; d++){
+    // main type
+    const mainType = (d===6) ? 'lunch' : (state.dayChoice[`${week}-w${d}`] || 'breakfast');
+    const selKey = `sel-${week}-${d}-${mainType}`;
+    const sel = state.weeks[week][selKey] || 'skip';
+    curWeek += priceForSelection(mainType, sel, week, d);
+    // dinner
+    const dk = `sel-${week}-${d}-dinner`;
+    const dsel = state.weeks[week][dk] || 'skip';
+    curWeek += priceForSelection('dinner', dsel, week, d);
+  }
+  document.getElementById('curWeekVal').innerText = 'Rs. '+curWeek.toFixed(2);
+
+  // Sunday total: sum Sunday for all weeks (lunch+dinner each)
+  let sunTotal=0;
+  for(let w=1; w<=4; w++){
+    const s1 = state.weeks[w][`sel-${w}-6-lunch`] || 'skip';
+    const s2 = state.weeks[w][`sel-${w}-6-dinner`] || 'skip';
+    sunTotal += priceForSelection('lunch', s1, w, 6);
+    sunTotal += priceForSelection('dinner', s2, w, 6);
+  }
+  document.getElementById('sunTotalVal').innerText = 'Rs. '+sunTotal.toFixed(2);
+
+  // Weekdays total (Mon-Sat) across 4 weeks
+  let weekdaysTotal=0;
+  for(let w=1; w<=4; w++){
+    for(let d=0; d<6; d++){
+      const mt = (d===6) ? 'lunch' : (state.dayChoice[`${w}-w${d}`] || 'breakfast');
+      const s = state.weeks[w][`sel-${w}-${d}-${mt}`] || 'skip';
+      weekdaysTotal += priceForSelection(mt, s, w, d);
+      const ds = state.weeks[w][`sel-${w}-${d}-dinner`] || 'skip';
+      weekdaysTotal += priceForSelection('dinner', ds, w, d);
+    }
+  }
+  document.getElementById('wdTotalVal').innerText = 'Rs. '+weekdaysTotal.toFixed(2);
+
+  const grand = weekdaysTotal + sunTotal;
+  document.getElementById('grandVal').innerText = 'Rs. '+grand.toFixed(2);
+
+  // also optionally show difference next to values comparing budgets
+  // (not shown inline here, but we kept budgets storage for comparisons)
 }
 
-/* Meal label */
-.meal-label {
-  font-size: 0.72rem;
-  color: #9ca3af;
-  margin: 6px 0 3px 0;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+/* ---------- Init ---------- */
+function ensureStructure(){
+  // make sure each week object has keys for all selects defaulted to skip so calculations straightforward
+  for(let w=1; w<=4; w++){
+    const wk = state.weeks[w] || {};
+    for(let d=0; d<7; d++){
+      const keys = [
+        `sel-${w}-${d}-breakfast`,
+        `sel-${w}-${d}-lunch`,
+        `sel-${w}-${d}-dinner`,
+        `price-${w}-${d}-breakfast`,
+        `price-${w}-${d}-lunch`,
+        `price-${w}-${d}-dinner`
+      ];
+      keys.forEach(k=>{ if(!(k in wk)) wk[k] = (k.startsWith('price') ? '0' : 'skip'); });
+    }
+    state.weeks[w] = wk;
+  }
+  saveState();
 }
 
-/* Selectbox styling */
-div.stSelectbox > div > div {
-  border-radius: 6px;
-  background-color: rgba(15,23,42,1);
-  border: 1px solid rgba(148,163,184,0.5);
-  color: #e5e7eb;
-}
+ensureStructure();
+makeWeekButtons();
+makeGrid();
+updateSummary();
 
-/* Text input for custom prices & budgets */
-div.stTextInput > div > input[type="text"] {
-  background-color: rgba(15,23,42,1);
-  border-radius: 6px;
-  border: 1px solid rgba(148,163,184,0.5);
-  padding: 6px 8px;
-  color: #e5e7eb;
-}
+/* helpful: expose state to window for debugging (remove in prod) */
+window.mealsyncState = state;
+</script>
+</body>
+</html>
+"""
 
-/* Budgets title using same card style */
-.budgets-title {
-  font-weight: 700;
-  font-size: 0.95rem;
-  margin: 0 0 6px 0;
-  color: #e0f2fe;
-}
-
-/* Budget label */
-.budget-label {
-  color: #d1e5ff;
-  margin-bottom: 2px;
-  font-size: 0.84rem;
-}
-
-/* Summary frame */
-.summary-frame {
-  border: 1px solid rgba(148,163,184,0.7);
-  border-radius: 8px;
-  padding: 8px 10px;
-  margin-top: 8px;
-  background-color: rgba(15,23,42,0.9);
-}
-
-/* Summary differences */
-.diff-pos { color: #4ade80; font-weight: 600; }
-.diff-neg { color: #fb7185; font-weight: 600; }
-
-</style>
-""",
-    unsafe_allow_html=True,
-)
-
-# -------------------------
-# Data models & options
-# -------------------------
-MealType = Literal["breakfast", "lunch", "dinner"]
-
-@dataclass
-class Meal:
-    id: str
-    name: str
-    price: float
-
-breakfast_options: List[Meal] = [
-    Meal("medu-vada", "Medu vada", 20.0),
-    Meal("pongal", "Pongal", 25.0),
-    Meal("sambar-vada", "Sambar vada", 32.0),
-    Meal("curd-vada", "Curd vada", 32.0),
-    Meal("pav-bhaji", "Pav bhaji", 38.0),
-    Meal("alu-paratha", "Alu paratha", 38.0),
-    Meal("macaroni", "Macaroni", 38.0),
-    Meal("daal-poori", "Daal poori", 38.0),
-]
-
-lunch_options: List[Meal] = [
-    Meal("mess-lunch", "Mess Lunch", 60.0),
-    Meal("special-lunch", "Special Lunch", 80.0),
-]
-
-dinner_options: List[Meal] = [
-    Meal("mess-dinner", "Mess Dinner", 60.0),
-    Meal("special-dinner", "Special Dinner", 80.0),
-]
-
-DEFAULTS = [
-    {"week": 1, "day": 2, "meal_name": "Pav bhaji"},
-    {"week": 3, "day": 3, "meal_name": "Pav bhaji"},
-    {"week": 1, "day": 4, "meal_name": "Maggi"},
-    {"week": 1, "day": 6, "meal_name": "Alu paratha"},
-    {"week": 4, "day": 4, "meal_name": "Alu paratha"},
-    {"week": 2, "day": 4, "meal_name": "Macaroni"},
-    {"week": 2, "day": 5, "meal_name": "Macaroni"},
-    {"week": 4, "day": 6, "meal_name": "Daal poori"},
-]
-
-DEFAULT_BUDGETS = {
-    "weekly": 840.0,
-    "sunday": 2140.0,
-    "weekdays": 3360.0,
-    "grandTotal": 5500.0,
-}
-
-WEEK_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-
-# -------------------------
-# Helper functions
-# -------------------------
-def get_meal_key(week: int, day_index: int) -> str:
-    return f"w{week}-d{day_index}"
-
-def find_breakfast_by_name(name: str) -> Optional[Meal]:
-    for m in breakfast_options:
-        if m.name.lower() == name.lower():
-            return m
-    return None
-
-def get_default_meal_for(week: int, day_index: int) -> Optional[Meal]:
-    day_of_week = day_index + 1
-    for item in DEFAULTS:
-        if item["week"] == week and item["day"] == day_of_week:
-            return find_breakfast_by_name(item["meal_name"])
-    return None
-
-def get_breakfast_options_for(week: int, day_index: int) -> List[Meal]:
-    specific_names = {"Medu vada", "Pongal", "Sambar vada", "Curd vada"}
-    specific = [m for m in breakfast_options if m.name in specific_names]
-    default_meal = get_default_meal_for(week, day_index)
-    if default_meal:
-        rest = [m for m in specific if m.id != default_meal.id]
-        return [default_meal] + rest
-    return specific
-
-def get_options_for_meal_type(meal_type: MealType, week: int, day_index: int) -> List[Meal]:
-    if meal_type == "breakfast":
-        return get_breakfast_options_for(week, day_index)
-    if meal_type == "lunch":
-        return lunch_options
-    if meal_type == "dinner":
-        return dinner_options
-    return []
-
-def get_main_meal_type(week: int, day_index: int) -> MealType:
-    if day_index == 6:
-        return "lunch"
-    key = get_meal_key(week, day_index)
-    return st.session_state.day_meal_choices.get(key, "breakfast")
-
-def parse_float_safe(value: str, default: float = 0.0) -> float:
-    try:
-        return float(value)
-    except Exception:
-        return default
-
-def get_meal_price(week: int, day_index: int, meal_type: MealType) -> float:
-    sel_key = f"sel-w{week}-d{day_index}-{meal_type}"
-    sel = st.session_state.get(sel_key, "skip")
-    if sel == "skip":
-        return 0.0
-    if sel == "custom":
-        price_key = f"price-w{week}-d{day_index}-{meal_type}"
-        return parse_float_safe(st.session_state.get(price_key, "0"))
-    meals = get_options_for_meal_type(meal_type, week, day_index)
-    for m in meals:
-        if m.id == sel:
-            return m.price
-    return 0.0
-
-def weekly_cost_for(week: int) -> float:
-    total = 0.0
-    for d in range(6):
-        total += get_meal_price(week, d, get_main_meal_type(week, d))
-        total += get_meal_price(week, d, "dinner")
-    return total
-
-def sunday_total_cost_all_weeks() -> float:
-    tot = 0.0
-    for w in range(1, 5):
-        tot += get_meal_price(w, 6, "lunch")
-        tot += get_meal_price(w, 6, "dinner")
-    return tot
-
-def weekdays_total_cost_all_weeks() -> float:
-    tot = 0.0
-    for w in range(1, 5):
-        tot += weekly_cost_for(w)
-    return tot
-
-def format_difference_html(cost: float, budget: float) -> str:
-    diff = budget - cost
-    if abs(diff) < 1e-9:
-        return ""
-    sign = "+" if diff > 0 else ""
-    cls = "diff-pos" if diff > 0 else "diff-neg"
-    return f" <span class='{cls}'>({sign}{diff:.2f})</span>"
-
-# -------------------------
-# Session state
-# -------------------------
-if "selected_week" not in st.session_state:
-    st.session_state.selected_week = 1
-
-if "day_meal_choices" not in st.session_state:
-    st.session_state.day_meal_choices = {}
-
-if "budgets_initialized" not in st.session_state:
-    for k, v in DEFAULT_BUDGETS.items():
-        st.session_state[f"budget-{k}"] = f"{float(v):.2f}"
-    st.session_state.budgets_initialized = True
-
-# -------------------------
-# Top UI
-# -------------------------
-st.markdown("<div class='app-title'>MealSync</div>", unsafe_allow_html=True)
-st.markdown("<div class='app-sub'>Your weekly meal planning, simplified.</div>", unsafe_allow_html=True)
-
-st.markdown("<div class='week-buttons'></div>", unsafe_allow_html=True)
-week_cols = st.columns(4)
-for i, col in enumerate(week_cols, start=1):
-    with col:
-        clicked = st.button(
-            f"Week {i}",
-            key=f"week-btn-{i}",
-            type=("primary" if st.session_state.selected_week == i else "secondary"),
-        )
-        if clicked:
-            st.session_state.selected_week = i
-            st.rerun()
-
-selected_week = st.session_state.selected_week
-st.markdown("---")
-
-# -------------------------
-# 2×4 grid: 7 day-cards + 1 budgets-card
-# -------------------------
-rows = 2
-cols_per_row = 4
-cell_index = 0
-
-for r in range(rows):
-    cols = st.columns(cols_per_row, gap="small")
-    for col in cols:
-        with col:
-            if cell_index < 7:
-                day_index = cell_index
-                is_sunday = (day_index == 6)
-
-                # ⬇ ONE RECTANGULAR CARD around heading + all options
-                st.markdown("<div class='day-card'>", unsafe_allow_html=True)
-
-                # heading inside the card
-                heading_cls = "day-heading sunday" if is_sunday else "day-heading"
-                st.markdown(
-                    f"<div class='{heading_cls}'>{WEEK_DAYS[day_index]}</div>",
-                    unsafe_allow_html=True,
-                )
-
-                # Toggle breakfast/lunch on Mon–Sat (inside same border)
-                if not is_sunday:
-                    key = get_meal_key(selected_week, day_index)
-                    cur = st.session_state.day_meal_choices.get(key, "breakfast")
-                    icon = "☕" if cur == "breakfast" else "🍛"
-                    label = f"{icon} {cur.capitalize()} — click to switch"
-                    if st.button(label, key=f"toggle-{selected_week}-{day_index}"):
-                        st.session_state.day_meal_choices[key] = (
-                            "lunch" if cur == "breakfast" else "breakfast"
-                        )
-                        st.rerun()
-
-                # Which meal types to show
-                if is_sunday:
-                    meal_types: List[MealType] = ["lunch", "dinner"]
-                else:
-                    meal_types = [get_main_meal_type(selected_week, day_index), "dinner"]
-
-                for mt in meal_types:
-                    pretty = mt.capitalize()
-                    icon = "☕" if mt == "breakfast" else ("☀️" if mt == "lunch" else "🌙")
-                    st.markdown(
-                        f"<div class='meal-label'>{icon} {pretty}</div>",
-                        unsafe_allow_html=True,
-                    )
-
-                    meals = get_options_for_meal_type(mt, selected_week, day_index)
-                    values = ["skip"] + [m.id for m in meals] + ["custom"]
-                    labels = {"skip": "Skip this meal", "custom": "Custom price (type Rs.)"}
-                    for m in meals:
-                        labels[m.id] = f"{m.name} (Rs. {m.price:.2f})"
-
-                    sel_key = f"sel-w{selected_week}-d{day_index}-{mt}"
-                    if sel_key not in st.session_state:
-                        default_val = "skip"
-                        if mt == "breakfast":
-                            default_meal = get_default_meal_for(selected_week, day_index)
-                            if default_meal:
-                                default_val = default_meal.id
-                        st.session_state[sel_key] = default_val
-
-                    choice = st.selectbox(
-                        "",
-                        values,
-                        key=sel_key,
-                        format_func=lambda v, labels=labels: labels[v],
-                        label_visibility="collapsed",
-                    )
-
-                    if choice == "custom":
-                        price_key = f"price-w{selected_week}-d{day_index}-{mt}"
-                        if price_key not in st.session_state:
-                            st.session_state[price_key] = "0"
-                        st.text_input(
-                            "Custom price (Rs.)",
-                            key=price_key,
-                            label_visibility="collapsed",
-                        )
-
-                st.markdown("</div>", unsafe_allow_html=True)  # close .day-card
-
-            else:
-                # Budgets card, same rectangular style
-                st.markdown("<div class='day-card'>", unsafe_allow_html=True)
-                st.markdown("<div class='budgets-title'>Budgets</div>", unsafe_allow_html=True)
-
-                budget_labels = {
-                    "weekly": "Week Total",
-                    "sunday": "Sunday Total (all 4 weeks)",
-                    "weekdays": "Weekdays Total (all 4 weeks)",
-                    "grandTotal": "Grand Total",
-                }
-
-                for key, label in budget_labels.items():
-                    left, right = st.columns([1, 3], gap="small")
-                    with left:
-                        if st.button("Default", key=f"reset-{key}"):
-                            st.session_state[f"budget-{key}"] = f"{float(DEFAULT_BUDGETS[key]):.2f}"
-                            st.rerun()
-                    with right:
-                        if f"budget-{key}" not in st.session_state:
-                            st.session_state[f"budget-{key}"] = f"{float(DEFAULT_BUDGETS[key]):.2f}"
-                        st.markdown(
-                            f"<div class='budget-label'>{label}</div>",
-                            unsafe_allow_html=True,
-                        )
-                        st.text_input(
-                            "Budget (Rs.)",
-                            key=f"budget-{key}",
-                            label_visibility="collapsed",
-                        )
-
-                st.markdown("</div>", unsafe_allow_html=True)  # close .day-card
-
-        cell_index += 1
-
-# -------------------------
-# Cost summary
-# -------------------------
-budgets = {}
-for k in DEFAULT_BUDGETS.keys():
-    raw = st.session_state.get(f"budget-{k}", f"{DEFAULT_BUDGETS[k]:.2f}")
-    budgets[k] = parse_float_safe(raw, DEFAULT_BUDGETS[k])
-
-wk_cost = weekly_cost_for(selected_week)
-sun_cost = sunday_total_cost_all_weeks()
-wd_cost = weekdays_total_cost_all_weeks()
-grand_cost = sun_cost + wd_cost
-
-st.markdown("")
-st.markdown("<div class='summary-frame'>", unsafe_allow_html=True)
-st.markdown(
-    "<div style='font-weight:700;margin-bottom:4px;color:#e0f2fe'>Cost Summary</div>",
-    unsafe_allow_html=True,
-)
-
-def summary_row(label: str, value: float, budget_key: str):
-    diff_html = format_difference_html(value, budgets[budget_key])
-    st.markdown(
-        f"<div style='display:flex;justify-content:space-between;margin-bottom:4px;'>"
-        f"<div style='color:#dbeafe'>{label}</div>"
-        f"<div style='font-weight:700;color:#bfdbfe'>Rs. {value:.2f}{diff_html}</div>"
-        f"</div>",
-        unsafe_allow_html=True,
-    )
-
-summary_row("Current Week Total:", wk_cost, "weekly")
-summary_row("Sunday Total:", sun_cost, "sunday")
-st.markdown(
-    "<hr style='border-color:rgba(148,163,184,0.5);margin:4px 0;'/>",
-    unsafe_allow_html=True,
-)
-summary_row("Weekdays Total:", wd_cost, "weekdays")
-summary_row("Grand Total:", grand_cost, "grandTotal")
-st.markdown("</div>", unsafe_allow_html=True)
+components.html(html, height=900, scrolling=True)
