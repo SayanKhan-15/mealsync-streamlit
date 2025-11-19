@@ -75,7 +75,7 @@ html = r"""
       border:1px solid rgba(31,41,55,0.9);
       padding: 14px;
       box-sizing:border-box;
-      height: 340px;           /* reduced height, shared by days + budgets */
+      height: 310px;           /* reduced height for less empty space */
     }
 
     .day-header {
@@ -305,7 +305,6 @@ html = r"""
     const diff = b - cost;
     if(Math.abs(diff) < 0.005) return '';
     const abs = Math.abs(diff).toFixed(2);
-    // removed space: "+120.00" instead of "+ 120.00"
     const text = diff > 0 ? `+${abs}` : `-${abs}`;
     const cls = diff > 0 ? 'diff-pos' : 'diff-neg';
     return ` <span class="${cls}">(${text})</span>`;
