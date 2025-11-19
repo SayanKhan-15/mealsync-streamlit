@@ -147,35 +147,79 @@ html = r"""
 </div>
 
 <script>
-/* ---------- Data ---------- */
-const breakfastOptions = [
-  {id:'medu', name:'Medu vada', price:20},
-  {id:'pongal', name:'Pongal', price:25},
-  {id:'sambar', name:'Sambar vada', price:32},
-  {id:'curd', name:'Curd vada', price:32},
-  {id:'pav', name:'Pav bhaji', price:38},
-  {id:'alu', name:'Alu paratha', price:38},
-  {id:'mac', name:'Macaroni', price:38},
-  {id:'daal', name:'Daal poori', price:38}
-];
-const lunchOptions = [
-  {id:'l1', name:'Mess Lunch', price:60},
-  {id:'l2', name:'Special Lunch', price:80}
-];
-const dinnerOptions = [
-  {id:'d1', name:'Mess Dinner', price:60},
-  {id:'d2', name:'Special Dinner', price:80}
+/* ---------- Breakfast data with special defaults ---------- */
+/* Core breakfast options (available everywhere) */
+const BF_MEDU   = {id:'medu',  name:'Medu vada',    price:20};
+const BF_PONGAL = {id:'pongal',name:'Pongal',       price:25};
+const BF_SAMBAR = {id:'sambar',name:'Sambar vada',  price:32};
+const BF_CURD   = {id:'curd',  name:'Curd vada',    price:32};
+
+/* Special breakfast items used as defaults on certain days */
+const BF_PAV    = {id:'pav',   name:'Pav bhaji',    price:38};
+const BF_MAGGI  = {id:'maggi', name:'Maggi',        price:38};
+const BF_ALU    = {id:'alu',   name:'Alu paratha',  price:38};
+const BF_MAC    = {id:'mac',   name:'Macaroni',     price:38};
+const BF_DAAL   = {id:'daal',  name:'Daal poori',   price:38};
+
+/* Core list used on non-special days */
+const breakfastBase = [BF_MEDU, BF_PONGAL, BF_SAMBAR, BF_CURD];
+
+/* Map of (week, dayIndex) -> special default breakfast */
+const specialBreakfastMap = {
+  // Pav bhaji defaults
+  '1-1': BF_PAV, // week 1, Tuesday (dayIndex 1)
+  '3-2': BF_PAV, // week 3, Wednesday (2)
+
+  // Maggi default
+  '1-3': BF_MAGGI, // week 1, Thursday (3)
+
+  // Alu paratha defaults
+  '1-5': BF_ALU, // week 1, Saturday (5)
+  '4-3': BF_ALU, // week 4, Thursday (3)
+
+  // Macaroni defaults
+  '2-3': BF_MAC, // week 2, Thursday (3)
+  '2-4': BF_MAC, // week 2, Friday (4)
+
+  // Daal poori default
+  '4-5': BF_DAAL // week 4, Saturday (5)
+};
+
+/* Combined list for price lookups (core + all specials) */
+const breakfastAll = [
+  BF_MEDU, BF_PONGAL, BF_SAMBAR, BF_CURD,
+  BF_PAV, BF_MAGGI, BF_ALU, BF_MAC, BF_DAAL
 ];
 
-const DEFAULTS = [
-  {week:1, day:2, meal_name:'Pav bhaji'},
-  {week:3, day:3, meal_name:'Pav bhaji'},
-  {week:1, day:4, meal_name:'Maggi'},
-  {week:1, day:6, meal_name:'Alu paratha'},
-  {week:4, day:4, meal_name:'Alu paratha'},
-  {week:2, day:4, meal_name:'Macaroni'},
-  {week:2, day:5, meal_name:'Macaroni'},
-  {week:4, day:6, meal_name:'Daal poori'}
+/* For a given week & dayIndex, decide breakfast options + default id */
+function getBreakfastConfig(week, dayIndex){
+  const key = `${week}-${dayIndex}`;
+  const special = specialBreakfastMap[key];
+  if(special){
+    return {
+      defaultId: special.id,
+      options: [special, ...breakfastBase]
+    };
+  }
+  return {
+    defaultId: null, // no auto default, will stay "Skip this meal"
+    options: breakfastBase
+  };
+}
+
+/* ---------- Lunch & dinner options ---------- */
+const lunchOptions = [
+  {id:'l-biryani',  name:'Biryani',      price:85},
+  {id:'l-sambar',   name:'Sambar rice',  price:57}
+];
+
+const dinnerOptions = [
+  {id:'d-dosa',     name:'Dosa',     price:48},
+  {id:'d-fish',     name:'Fish',     price:90},
+  {id:'d-veg',      name:'Veg',      price:95},
+  {id:'d-chicken',  name:'Chicken',  price:110},
+  {id:'d-mushroom', name:'Mushroom', price:80},
+  {id:'d-biryani',  name:'Biryani',  price:131}
 ];
 
 const DEFAULT_BUDGETS = {
@@ -204,15 +248,12 @@ function priceForSelection(mealType, sel, week, day){
     const v = state.weeks[week][key];
     return parseFloat(v || 0) || 0;
   }
-  const list = mealType==='breakfast' ? breakfastOptions : (mealType==='lunch' ? lunchOptions : dinnerOptions);
+  let list;
+  if(mealType==='breakfast') list = breakfastAll;
+  else if(mealType==='lunch') list = lunchOptions;
+  else list = dinnerOptions;
   const found = list.find(x=>x.id===sel);
   return found ? found.price : 0;
-}
-function getDefaultFor(week, day){
-  const dd = DEFAULTS.find(d=>d.week===week && d.day===day+1);
-  if(!dd) return null;
-  const name = dd.meal_name.toLowerCase();
-  return breakfastOptions.find(b=>b.name.toLowerCase()===name) || null;
 }
 
 /* ---------- Rendering ---------- */
@@ -246,12 +287,13 @@ function makeGrid(){
       if(day===6) title.className += ' sunday';
       hdr.appendChild(title);
 
+      // toggle breakfast/lunch on Mon–Sat
       if(day!==6){
         const key = `${week}-w${day}`;
         if(!state.dayChoice[key]) state.dayChoice[key]='breakfast';
         const tbtn = document.createElement('button');
         tbtn.className='toggle-btn';
-        tbtn.innerText='⇄';          // arrow only, no text
+        tbtn.innerText='⇄';          // arrow only
         tbtn.title='Toggle breakfast / lunch';
         tbtn.onclick = ()=>{
           state.dayChoice[key] = (state.dayChoice[key]==='breakfast' ? 'lunch' : 'breakfast');
@@ -265,24 +307,39 @@ function makeGrid(){
 
       const mainType = (day===6) ? 'lunch' : state.dayChoice[`${week}-w${day}`] || 'breakfast';
 
-      const mainLabel = document.createElement('div'); mainLabel.className='section-label'; mainLabel.innerText = mainType.toUpperCase();
+      // ----- MAIN MEAL -----
+      const mainLabel = document.createElement('div'); 
+      mainLabel.className='section-label'; 
+      mainLabel.innerText = mainType.toUpperCase();
       card.appendChild(mainLabel);
 
       const mainSelect = document.createElement('select');
       const mainSelKey = `sel-${week}-${day}-${mainType}`;
-      if(!state.weeks[week][mainSelKey]) {
-        let def = 'skip';
-        if(mainType==='breakfast'){
-          const d = getDefaultFor(week, day);
-          if(d) def = d.id;
-        }
-        state.weeks[week][mainSelKey] = def;
+
+      // determine options & default for MAIN
+      let opts;
+      let defaultVal = 'skip';
+      if(mainType==='breakfast'){
+        const cfg = getBreakfastConfig(week, day);
+        opts = cfg.options;
+        if(cfg.defaultId) defaultVal = cfg.defaultId;
+      } else if(mainType==='lunch'){
+        opts = lunchOptions;
+      } else {
+        opts = dinnerOptions;
+      }
+
+      if(!(mainSelKey in state.weeks[week])) {
+        state.weeks[week][mainSelKey] = defaultVal;
         saveState();
       }
-      const opts = (mainType==='breakfast') ? breakfastOptions : (mainType==='lunch' ? lunchOptions : dinnerOptions);
+
       mainSelect.innerHTML = '';
       const addOption = (value, label) => {
-        const o = document.createElement('option'); o.value=value; o.innerText=label; if(state.weeks[week][mainSelKey]===value) o.selected = true; mainSelect.appendChild(o);
+        const o = document.createElement('option'); 
+        o.value=value; o.innerText=label; 
+        if(state.weeks[week][mainSelKey]===value) o.selected = true; 
+        mainSelect.appendChild(o);
       };
       addOption('skip','Skip this meal');
       opts.forEach(m => addOption(m.id, `${m.name} (Rs. ${m.price.toFixed(2)})`));
@@ -312,13 +369,23 @@ function makeGrid(){
         card.appendChild(input);
       }
 
-      const dinnerLabel = document.createElement('div'); dinnerLabel.className='section-label'; dinnerLabel.innerText = 'DINNER';
+      // ----- DINNER -----
+      const dinnerLabel = document.createElement('div'); 
+      dinnerLabel.className='section-label'; 
+      dinnerLabel.innerText = 'DINNER';
       card.appendChild(dinnerLabel);
+
       const dinnerKey = `sel-${week}-${day}-dinner`;
-      if(!state.weeks[week][dinnerKey]) state.weeks[week][dinnerKey] = 'skip';
+      if(!(dinnerKey in state.weeks[week])) state.weeks[week][dinnerKey] = 'skip';
+
       const dinnerSelect = document.createElement('select');
       dinnerSelect.innerHTML = '';
-      const addD = (v,l)=>{ const o=document.createElement('option'); o.value=v; o.innerText=l; if(state.weeks[week][dinnerKey]===v) o.selected=true; dinnerSelect.appendChild(o); };
+      const addD = (v,l)=>{ 
+        const o=document.createElement('option'); 
+        o.value=v; o.innerText=l; 
+        if(state.weeks[week][dinnerKey]===v) o.selected=true; 
+        dinnerSelect.appendChild(o); 
+      };
       addD('skip','Skip this meal');
       dinnerOptions.forEach(m => addD(m.id, `${m.name} (Rs. ${m.price.toFixed(2)})`));
       addD('custom','Custom price (type Rs.)');
@@ -337,13 +404,19 @@ function makeGrid(){
       if(state.weeks[week][dinnerKey] === 'custom'){
         const pk=`price-${week}-${day}-dinner`;
         if(!(pk in state.weeks[week])) state.weeks[week][pk]='0';
-        const input = document.createElement('input'); input.type='text'; input.value= state.weeks[week][pk];
-        input.oninput=(e)=>{ state.weeks[week][pk]=e.target.value; saveState(); updateSummary(); };
+        const input = document.createElement('input'); 
+        input.type='text'; 
+        input.value= state.weeks[week][pk];
+        input.oninput=(e)=>{ 
+          state.weeks[week][pk]=e.target.value; 
+          saveState(); 
+          updateSummary(); 
+        };
         card.appendChild(input);
       }
 
     } else {
-      // budgets card
+      // -------- Budgets card --------
       const hdr = document.createElement('div'); hdr.className='day-header';
       const title = document.createElement('div'); title.className='day-title'; title.innerText='Budgets';
       hdr.appendChild(title);
@@ -356,13 +429,11 @@ function makeGrid(){
         {k:'grandTotal', label:'Grand Total'}
       ];
       keys.forEach(item=>{
-        // label on its own line
         const lab = document.createElement('div');
         lab.className='budget-label';
         lab.innerText = item.label;
         card.appendChild(lab);
 
-        // row with input (left) + Default button (right)
         const row = document.createElement('div');
         row.className='budget-row';
 
@@ -437,20 +508,9 @@ function updateSummary(){
 /* ---------- Init ---------- */
 function ensureStructure(){
   for(let w=1; w<=4; w++){
-    const wk = state.weeks[w] || {};
-    for(let d=0; d<7; d++){
-      const keys = [
-        `sel-${w}-${d}-breakfast`,
-        `sel-${w}-${d}-lunch`,
-        `sel-${w}-${d}-dinner`,
-        `price-${w}-${d}-breakfast`,
-        `price-${w}-${d}-lunch`,
-        `price-${w}-${d}-dinner`
-      ];
-      keys.forEach(k=>{ if(!(k in wk)) wk[k] = (k.startsWith('price') ? '0' : 'skip'); });
-    }
-    state.weeks[w] = wk;
+    if(!state.weeks[w]) state.weeks[w] = {};
   }
+  if(!state.budgets) state.budgets = {};
   saveState();
 }
 
