@@ -161,13 +161,12 @@ html = r"""
       gap:10px;
       z-index:1;
     }
+
+    /* CHANGED: allow wrapping so full text is visible */
     .meal-label{
       font-size:14px;
       color:#e5e7eb;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      max-width:calc(100% - 40px);
+      line-height:1.3;
     }
     .meal-label.muted{
       color:#9ca3af;
@@ -654,5 +653,5 @@ html = r"""
 </html>
 """
 
-# higher iframe height allows scrolling on mobile; value can be adjusted if you want it smaller
+# Higher height so everything scrolls nicely on mobile
 components.html(html, height=1600, scrolling=True)
