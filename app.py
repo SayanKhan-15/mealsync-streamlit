@@ -45,17 +45,24 @@ html = r"""
     }
 
     /* 2x4 grid */
-    .grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-top:8px; }
-    @media (max-width: 900px){ .grid { grid-template-columns:repeat(2,1fr);} }
+    .grid {
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:14px;
+      margin-top:8px;
+    }
+    @media (max-width: 900px){
+      .grid { grid-template-columns:repeat(2,1fr); }
+    }
 
-    /* card frames */
+    /* card frames – FIXED HEIGHT so all cards equal */
     .card {
       background: var(--card);
       border-radius:10px;
       border: 1px solid var(--frame);
       padding: var(--card-padding);
       box-sizing:border-box;
-      min-height: 120px;
+      height: 280px;           /* <- all cards same height */
     }
 
     .day-header {
@@ -313,7 +320,7 @@ function createMealIcon(kind){
   return span;
 }
 
-/* ---------- Diff helper (used in summary + per-day) ---------- */
+/* ---------- Diff helper ---------- */
 function diffHtml(cost, budgetVal){
   const b = parseFloat(budgetVal);
   if(isNaN(b)) return '';
