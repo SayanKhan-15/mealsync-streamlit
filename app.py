@@ -15,7 +15,7 @@ html = r"""
       --bg:#0b1116;
       --card:#0d1620;
       --muted:#9fb6c9;
-      --accent:#60a5fa;
+      --accent:#2563EB;   /* solid blue */
       --accent2:#7c3aed;
       --frame: rgba(148,163,184,0.45);
       --green:#4ade80;
@@ -30,8 +30,19 @@ html = r"""
     p.subtitle { text-align:center; color: #9aaec0; margin:0 0 18px 0; }
 
     .week-row { display:flex; justify-content:center; gap:16px; margin:18px 0 18px 0; flex-wrap:wrap; }
-    .week-btn { padding:8px 14px; border-radius:18px; border:1px solid rgba(255,255,255,0.04); background: rgba(255,255,255,0.02); color:var(--text); cursor:pointer; }
-    .week-btn.active { background: linear-gradient(135deg,var(--accent),var(--accent2)); color:white; border-color:transparent; }
+    .week-btn {
+      padding:8px 14px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(15,23,42,0.8);
+      color:var(--text);
+      cursor:pointer;
+    }
+    .week-btn.active {
+      background: var(--accent);      /* solid colour */
+      color:white;
+      border-color:#1D4ED8;
+    }
 
     /* 2x4 grid */
     .grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-top:8px; }
@@ -73,7 +84,7 @@ html = r"""
       padding:0;
     }
 
-    /* We now show icons INSIDE the select box */
+    /* Selects with icons inside */
     .select-wrapper {
       position:relative;
       margin:8px 0 4px 0;
@@ -82,12 +93,22 @@ html = r"""
       width:100%;
       padding:10px 12px 10px 44px; /* extra left padding for icon */
       border-radius:8px;
-      background: rgba(0,0,0,0.35);
-      border:1px solid rgba(255,255,255,0.06);
+      background: rgba(15,23,42,0.9);
+      border:1px solid rgba(148,163,184,0.6);
       color:var(--text);
       box-sizing:border-box;
       font-size:14px;
+      appearance:none;
+      -webkit-appearance:none;
+      -moz-appearance:none;
     }
+
+    /* Dropdown list colours */
+    select option {
+      background-color:#020617;   /* dark dropdown panel */
+      color:#e6eef8;              /* light text */
+    }
+
     .select-icon {
       position:absolute;
       left:12px;
@@ -120,8 +141,8 @@ html = r"""
       flex:1;
       padding:10px 12px;
       border-radius:8px;
-      background: rgba(0,0,0,0.35);
-      border:1px solid rgba(255,255,255,0.06);
+      background: rgba(15,23,42,0.9);
+      border:1px solid rgba(148,163,184,0.6);
       color:var(--text);
       box-sizing:border-box;
       font-size:14px;
@@ -133,8 +154,8 @@ html = r"""
       min-width:80px;
       white-space:nowrap;
       cursor:pointer;
-      border:1px solid rgba(96,165,250,0.9);
-      background: radial-gradient(circle at top left, rgba(37,99,235,0.9), rgba(79,70,229,0.9));
+      border:1px solid #1D4ED8;
+      background: #2563EB;     /* solid colour, no gradient */
       color:#e5f2ff;
       font-size:12px;
       font-weight:600;
@@ -177,54 +198,42 @@ html = r"""
 
 <script>
 /* ---------- Breakfast data with special defaults ---------- */
-/* Core breakfast options (available everywhere) */
 const BF_MEDU   = {id:'medu',  name:'Medu vada',    price:20};
 const BF_PONGAL = {id:'pongal',name:'Pongal',       price:25};
 const BF_SAMBAR = {id:'sambar',name:'Sambar vada',  price:32};
 const BF_CURD   = {id:'curd',  name:'Curd vada',    price:32};
 
-/* Special breakfast items used as defaults on certain days */
 const BF_PAV    = {id:'pav',   name:'Pav bhaji',    price:38};
 const BF_MAGGI  = {id:'maggi', name:'Maggi',        price:38};
 const BF_ALU    = {id:'alu',   name:'Alu paratha',  price:38};
 const BF_MAC    = {id:'mac',   name:'Macaroni',     price:38};
 const BF_DAAL   = {id:'daal',  name:'Daal poori',   price:38};
 
-/* Core list used on non-special days */
 const breakfastBase = [BF_MEDU, BF_PONGAL, BF_SAMBAR, BF_CURD];
 
-/* Map of (week, dayIndex) -> special default breakfast */
 const specialBreakfastMap = {
-  '1-1': BF_PAV,   // Week1 Tue
-  '3-2': BF_PAV,   // Week3 Wed
-  '1-3': BF_MAGGI, // Week1 Thu
-  '1-5': BF_ALU,   // Week1 Sat
-  '4-3': BF_ALU,   // Week4 Thu
-  '2-3': BF_MAC,   // Week2 Thu
-  '2-4': BF_MAC,   // Week2 Fri
-  '4-5': BF_DAAL   // Week4 Sat
+  '1-1': BF_PAV,
+  '3-2': BF_PAV,
+  '1-3': BF_MAGGI,
+  '1-5': BF_ALU,
+  '4-3': BF_ALU,
+  '2-3': BF_MAC,
+  '2-4': BF_MAC,
+  '4-5': BF_DAAL
 };
 
-/* Combined list for price lookup */
 const breakfastAll = [
   BF_MEDU, BF_PONGAL, BF_SAMBAR, BF_CURD,
   BF_PAV, BF_MAGGI, BF_ALU, BF_MAC, BF_DAAL
 ];
 
-/* For a given week & dayIndex, decide breakfast options + default id */
 function getBreakfastConfig(week, dayIndex){
   const key = `${week}-${dayIndex}`;
   const special = specialBreakfastMap[key];
   if(special){
-    return {
-      defaultId: special.id,
-      options: [special, ...breakfastBase]
-    };
+    return { defaultId: special.id, options: [special, ...breakfastBase] };
   }
-  return {
-    defaultId: null,
-    options: breakfastBase
-  };
+  return { defaultId: null, options: breakfastBase };
 }
 
 /* ---------- Lunch & dinner options ---------- */
@@ -293,13 +302,10 @@ function createMealIcon(kind){
   span.className = 'select-icon select-icon-' + kind;
   let svg = '';
   if(kind === 'breakfast'){
-    // cup
     svg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h13a3 3 0 0 0 0-6H4v6z"/><path d="M17 4v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V4"/><line x1="6" y1="18" x2="16" y2="18"/><line x1="8" y1="22" x2="14" y2="22"/></svg>';
   } else if(kind === 'lunch'){
-    // sun
     svg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.07" y2="4.93"/></svg>';
   } else {
-    // moon
     svg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
   }
   span.innerHTML = svg;
@@ -338,13 +344,12 @@ function makeGrid(){
       if(day===6) title.className += ' sunday';
       hdr.appendChild(title);
 
-      // toggle breakfast/lunch on Mon–Sat
       if(day!==6){
         const key = `${week}-w${day}`;
         if(!state.dayChoice[key]) state.dayChoice[key]='breakfast';
         const tbtn = document.createElement('button');
         tbtn.className='toggle-btn';
-        tbtn.innerText='⇄';          // arrow only
+        tbtn.innerText='⇄';
         tbtn.title='Toggle breakfast / lunch';
         tbtn.onclick = ()=>{
           state.dayChoice[key] = (state.dayChoice[key]==='breakfast' ? 'lunch' : 'breakfast');
@@ -358,40 +363,25 @@ function makeGrid(){
 
       const mainType = (day===6) ? 'lunch' : state.dayChoice[`${week}-w${day}`] || 'breakfast';
 
-      // ----- MAIN MEAL SELECT WITH ICON -----
+      /* MAIN SELECT */
       const mainWrapper = document.createElement('div');
       mainWrapper.className = 'select-wrapper';
-      const mainIcon = createMealIcon(mainType);
-      mainWrapper.appendChild(mainIcon);
-
+      mainWrapper.appendChild(createMealIcon(mainType));
       const mainSelect = document.createElement('select');
       const mainSelKey = `sel-${week}-${day}-${mainType}`;
 
-      // determine options & default for MAIN
       let opts;
       let defaultVal = 'skip';
-
       if(mainType==='breakfast'){
         const cfg = getBreakfastConfig(week, day);
         opts = cfg.options;
         if(cfg.defaultId) defaultVal = cfg.defaultId;
       } else if(mainType==='lunch'){
-        // Sunday lunch: only skip + custom
-        if(day === 6){
-          opts = []; // no fixed options
-        } else {
-          opts = lunchOptions;
-        }
+        if(day === 6){ opts = []; } else { opts = lunchOptions; }
       } else {
-        // dinner-as-main (rare)
-        if(day === 6){
-          opts = [];
-        } else {
-          opts = dinnerOptions;
-        }
+        if(day === 6){ opts = []; } else { opts = dinnerOptions; }
       }
 
-      // apply defaults respecting "modified" flag
       if(!(mainSelKey in state.weeks[week])) {
         state.weeks[week][mainSelKey] = defaultVal;
       } else if(mainType==='breakfast') {
@@ -402,9 +392,9 @@ function makeGrid(){
 
       mainSelect.innerHTML = '';
       const addOption = (value, label) => {
-        const o = document.createElement('option'); 
-        o.value=value; o.innerText=label; 
-        if(state.weeks[week][mainSelKey]===value) o.selected = true; 
+        const o = document.createElement('option');
+        o.value=value; o.innerText=label;
+        if(state.weeks[week][mainSelKey]===value) o.selected = true;
         mainSelect.appendChild(o);
       };
       addOption('skip','Skip this meal');
@@ -412,7 +402,7 @@ function makeGrid(){
       addOption('custom','Custom price (type ₹)');
       mainSelect.onchange = (e)=>{
         state.weeks[week][mainSelKey] = e.target.value;
-        state.modified[mainSelKey] = true; // user manually changed this main meal
+        state.modified[mainSelKey] = true;
         if(e.target.value==='custom'){
           const pk = `price-${week}-${day}-${mainType}`;
           if(!(pk in state.weeks[week])) state.weeks[week][pk] = '0';
@@ -437,11 +427,10 @@ function makeGrid(){
         card.appendChild(input);
       }
 
-      // ----- DINNER SELECT WITH ICON -----
+      /* DINNER SELECT */
       const dinnerWrapper = document.createElement('div');
       dinnerWrapper.className = 'select-wrapper';
-      const dinnerIcon = createMealIcon('dinner');
-      dinnerWrapper.appendChild(dinnerIcon);
+      dinnerWrapper.appendChild(createMealIcon('dinner'));
 
       const dinnerKey = `sel-${week}-${day}-dinner`;
       if(!(dinnerKey in state.weeks[week])) state.weeks[week][dinnerKey] = 'skip';
@@ -449,21 +438,17 @@ function makeGrid(){
       const dinnerSelect = document.createElement('select');
       dinnerSelect.innerHTML = '';
 
-      const addD = (v,l)=>{ 
-        const o=document.createElement('option'); 
-        o.value=v; o.innerText=l; 
-        if(state.weeks[week][dinnerKey]===v) o.selected=true; 
-        dinnerSelect.appendChild(o); 
+      const addD = (v,l)=>{
+        const o=document.createElement('option');
+        o.value=v; o.innerText=l;
+        if(state.weeks[week][dinnerKey]===v) o.selected=true;
+        dinnerSelect.appendChild(o);
       };
 
       addD('skip','Skip this meal');
-
       if(day !== 6){
-        // Normal days: full dinner menu
         dinnerOptions.forEach(m => addD(m.id, `${m.name} (₹ ${m.price.toFixed(2)})`));
       }
-      // Sunday: only skip + custom
-
       addD('custom','Custom price (type ₹)');
       dinnerSelect.onchange = (e)=>{
         state.weeks[week][dinnerKey] = e.target.value;
@@ -481,19 +466,19 @@ function makeGrid(){
       if(state.weeks[week][dinnerKey] === 'custom'){
         const pk=`price-${week}-${day}-dinner`;
         if(!(pk in state.weeks[week])) state.weeks[week][pk]='0';
-        const input = document.createElement('input'); 
-        input.type='text'; 
+        const input = document.createElement('input');
+        input.type='text';
         input.value= state.weeks[week][pk];
-        input.oninput=(e)=>{ 
-          state.weeks[week][pk]=e.target.value; 
-          saveState(); 
-          updateSummary(); 
+        input.oninput=(e)=>{
+          state.weeks[week][pk]=e.target.value;
+          saveState();
+          updateSummary();
         };
         card.appendChild(input);
       }
 
     } else {
-      // -------- Budgets card --------
+      /* Budgets card */
       const hdr = document.createElement('div'); hdr.className='day-header';
       const title = document.createElement('div'); title.className='day-title budgets'; title.innerText='Budgets';
       hdr.appendChild(title);
