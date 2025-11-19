@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import List, Literal, Optional
 
 # -------------------------
-# Page config & minimal rectangular frames UI
+# Page config & CSS
 # -------------------------
 st.set_page_config(page_title="MealSync", layout="wide")
 
@@ -12,133 +12,138 @@ st.markdown(
 <style>
 /* Page background */
 body {
-  background: linear-gradient(180deg, #061025 0%, #020617 100%);
-  color: #e6eef8;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background: linear-gradient(180deg, #020617 0%, #020617 60%, #000000 100%);
+  color: #e5e7eb;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-/* reduce top/bottom container padding */
+/* Container padding */
 section.main > div.block-container {
-  padding-top: 0.5rem;
-  padding-bottom: 0.8rem;
+  padding-top: 0.75rem;
+  padding-bottom: 1rem;
 }
 
 /* Title */
 .app-title {
-  font-size: 2.2rem;
+  font-size: 2.3rem;
   font-weight: 800;
   color: #7dd3fc;
   text-align: center;
-  margin-bottom: 0.12rem;
+  margin-bottom: 0.1rem;
 }
 .app-sub {
   text-align: center;
-  color: #9fb6c9;
-  margin-bottom: 0.6rem;
+  color: #9ca3af;
+  margin-bottom: 0.75rem;
 }
 
 /* Week buttons row */
 div.week-buttons > div.stButton > button {
   border-radius: 999px !important;
   padding: 6px 10px !important;
-  font-size: 0.85rem !important;
-  background: rgba(255,255,255,0.03) !important;
-  color: #e6eef8 !important;
-  border: 1px solid rgba(255,255,255,0.04) !important;
+  font-size: 0.84rem !important;
+  background: rgba(15,23,42,0.85) !important;
+  color: #e5e7eb !important;
+  border: 1px solid rgba(148,163,184,0.5) !important;
   white-space: nowrap !important;
 }
-div.week-buttons > div.stButton > button[kind="primary"]{
+div.week-buttons > div.stButton > button[kind="primary"] {
   background: linear-gradient(135deg,#2563eb,#7c3aed) !important;
+  border-color: transparent !important;
   color: #fff !important;
-  border: none !important;
 }
 
-/* Generic button look (Default etc) - keep single line */
+/* Generic buttons (toggle, Default) */
 div.stButton > button {
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  background-color: rgba(15,23,42,0.9);
+  color: #e5e7eb;
+  border: 1px solid rgba(148,163,184,0.5);
   white-space: nowrap;
   min-width: 72px;
+}
+
+/* === DAY CARD ===
+   One rectangular border that contains the
+   day heading + toggle + meal options.
+*/
+.day-card {
+  border: 1px solid rgba(148,163,184,0.7);
   border-radius: 8px;
-  padding: 6px 10px;
-  background-color: rgba(255,255,255,0.03);
-  color: #e6eef8;
-  border: 1px solid rgba(255,255,255,0.04);
-  font-size: 0.82rem;
+  padding: 8px 10px;
+  margin: 2px 0;
+  background-color: rgba(15,23,42,0.9);
 }
 
-/* RECTANGULAR CARD framed style */
-.card {
-  background: rgba(8,12,20,0.75);
-  border-radius: 6px;
-  border: 1px solid rgba(125, 211, 252, 0.10); /* soft frame */
-  padding: 10px 10px;      /* small padding */
-  margin: 4px 0;           /* minimal vertical spacing */
-  box-shadow: none;
-}
-
-/* Narrower top gap: prevent Streamlit markdown from adding spacing above first element */
-.card > .stMarkdown, .card > .stTextInput, .card > .stSelectbox, .card > .stButton {
+/* Remove extra top-gap that Streamlit adds before first element inside card */
+.day-card > .stMarkdown:first-of-type {
   margin-top: 0 !important;
-  margin-bottom: 6px !important;
 }
 
-/* Day header inside card (no extra box above it) */
-.day-header {
+/* Day heading text (inside the card, no separate box) */
+.day-heading {
   font-weight: 700;
   font-size: 1.0rem;
-  margin: 0 0 6px 0;
-  color: #e6f7ff;
+  margin: 0 0 4px 0;
+  color: #e0f2fe;
+}
+.day-heading.sunday {
+  color: #fecaca;
 }
 
-/* Sunday tint */
-.day-header.sunday { color: #ffd6d8; }
-
-/* Meal label small */
+/* Meal label */
 .meal-label {
   font-size: 0.72rem;
-  color: #9fb6c9;
-  margin-bottom: 4px;
+  color: #9ca3af;
+  margin: 6px 0 3px 0;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
-/* Selectbox styling compact */
+/* Selectbox styling */
 div.stSelectbox > div > div {
   border-radius: 6px;
-  background-color: rgba(10,14,20,0.98);
-  border: 1px solid rgba(255,255,255,0.04);
-  color: #e6eef8;
-  padding: 6px;
+  background-color: rgba(15,23,42,1);
+  border: 1px solid rgba(148,163,184,0.5);
+  color: #e5e7eb;
 }
 
-/* Text input styling (custom prices + budgets) - plain text */
+/* Text input for custom prices & budgets */
 div.stTextInput > div > input[type="text"] {
-  background-color: rgba(10,14,20,0.98);
+  background-color: rgba(15,23,42,1);
   border-radius: 6px;
-  border: 1px solid rgba(255,255,255,0.04);
-  color: #e6eef8;
+  border: 1px solid rgba(148,163,184,0.5);
   padding: 6px 8px;
+  color: #e5e7eb;
 }
 
-/* Budgets header flush */
+/* Budgets title using same card style */
 .budgets-title {
   font-weight: 700;
-  color: #e6f7ff;
+  font-size: 0.95rem;
   margin: 0 0 6px 0;
+  color: #e0f2fe;
 }
 
 /* Budget label */
-.budget-label { color: #cfefff; margin-bottom: 4px; font-size: 0.86rem; }
-
-/* Summary small frame */
-.summary-frame {
-  background: rgba(8,12,20,0.8);
-  border-radius: 6px;
-  border: 1px solid rgba(255,255,255,0.04);
-  padding: 10px;
-  margin-top: 8px;
+.budget-label {
+  color: #d1e5ff;
+  margin-bottom: 2px;
+  font-size: 0.84rem;
 }
 
-/* diffs */
+/* Summary frame */
+.summary-frame {
+  border: 1px solid rgba(148,163,184,0.7);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-top: 8px;
+  background-color: rgba(15,23,42,0.9);
+}
+
+/* Summary differences */
 .diff-pos { color: #4ade80; font-weight: 600; }
 .diff-neg { color: #fb7185; font-weight: 600; }
 
@@ -158,7 +163,6 @@ class Meal:
     name: str
     price: float
 
-# breakfast/lunch/dinner options
 breakfast_options: List[Meal] = [
     Meal("medu-vada", "Medu vada", 20.0),
     Meal("pongal", "Pongal", 25.0),
@@ -201,7 +205,7 @@ DEFAULT_BUDGETS = {
 WEEK_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
 # -------------------------
-# Helpers (same logic)
+# Helper functions
 # -------------------------
 def get_meal_key(week: int, day_index: int) -> str:
     return f"w{week}-d{day_index}"
@@ -292,7 +296,7 @@ def format_difference_html(cost: float, budget: float) -> str:
     return f" <span class='{cls}'>({sign}{diff:.2f})</span>"
 
 # -------------------------
-# Session state defaults
+# Session state
 # -------------------------
 if "selected_week" not in st.session_state:
     st.session_state.selected_week = 1
@@ -306,7 +310,7 @@ if "budgets_initialized" not in st.session_state:
     st.session_state.budgets_initialized = True
 
 # -------------------------
-# Top UI: title & weeks
+# Top UI
 # -------------------------
 st.markdown("<div class='app-title'>MealSync</div>", unsafe_allow_html=True)
 st.markdown("<div class='app-sub'>Your weekly meal planning, simplified.</div>", unsafe_allow_html=True)
@@ -328,62 +332,70 @@ selected_week = st.session_state.selected_week
 st.markdown("---")
 
 # -------------------------
-# 2x4 grid: 7 day framed cards, 8th budgets framed card
+# 2×4 grid: 7 day-cards + 1 budgets-card
 # -------------------------
 rows = 2
 cols_per_row = 4
-cell = 0
+cell_index = 0
 
 for r in range(rows):
     cols = st.columns(cols_per_row, gap="small")
     for col in cols:
         with col:
-            if cell < 7:
-                day_index = cell
+            if cell_index < 7:
+                day_index = cell_index
                 is_sunday = (day_index == 6)
 
-                # one framed card per day
-                st.markdown("<div class='card'>", unsafe_allow_html=True)
+                # ⬇ ONE RECTANGULAR CARD around heading + all options
+                st.markdown("<div class='day-card'>", unsafe_allow_html=True)
 
-                # header inside card (no extra empty stripe)
-                hdr_cls = "day-header sunday" if is_sunday else "day-header"
-                st.markdown(f"<div class='{hdr_cls}'>{WEEK_DAYS[day_index]}</div>", unsafe_allow_html=True)
+                # heading inside the card
+                heading_cls = "day-heading sunday" if is_sunday else "day-heading"
+                st.markdown(
+                    f"<div class='{heading_cls}'>{WEEK_DAYS[day_index]}</div>",
+                    unsafe_allow_html=True,
+                )
 
-                # toggle (Mon-Sat)
+                # Toggle breakfast/lunch on Mon–Sat (inside same border)
                 if not is_sunday:
                     key = get_meal_key(selected_week, day_index)
                     cur = st.session_state.day_meal_choices.get(key, "breakfast")
                     icon = "☕" if cur == "breakfast" else "🍛"
                     label = f"{icon} {cur.capitalize()} — click to switch"
                     if st.button(label, key=f"toggle-{selected_week}-{day_index}"):
-                        st.session_state.day_meal_choices[key] = "lunch" if cur == "breakfast" else "breakfast"
+                        st.session_state.day_meal_choices[key] = (
+                            "lunch" if cur == "breakfast" else "breakfast"
+                        )
                         st.rerun()
 
-                # show meal selects
+                # Which meal types to show
                 if is_sunday:
-                    mtypes = ["lunch", "dinner"]
+                    meal_types: List[MealType] = ["lunch", "dinner"]
                 else:
-                    mtypes = [get_main_meal_type(selected_week, day_index), "dinner"]
+                    meal_types = [get_main_meal_type(selected_week, day_index), "dinner"]
 
-                for mt in mtypes:
+                for mt in meal_types:
                     pretty = mt.capitalize()
                     icon = "☕" if mt == "breakfast" else ("☀️" if mt == "lunch" else "🌙")
-                    st.markdown(f"<div class='meal-label'>{icon} {pretty}</div>", unsafe_allow_html=True)
+                    st.markdown(
+                        f"<div class='meal-label'>{icon} {pretty}</div>",
+                        unsafe_allow_html=True,
+                    )
 
-                    opts = get_options_for_meal_type(mt, selected_week, day_index)
-                    values = ["skip"] + [m.id for m in opts] + ["custom"]
+                    meals = get_options_for_meal_type(mt, selected_week, day_index)
+                    values = ["skip"] + [m.id for m in meals] + ["custom"]
                     labels = {"skip": "Skip this meal", "custom": "Custom price (type Rs.)"}
-                    for m in opts:
+                    for m in meals:
                         labels[m.id] = f"{m.name} (Rs. {m.price:.2f})"
 
                     sel_key = f"sel-w{selected_week}-d{day_index}-{mt}"
                     if sel_key not in st.session_state:
-                        dv = "skip"
+                        default_val = "skip"
                         if mt == "breakfast":
-                            df = get_default_meal_for(selected_week, day_index)
-                            if df:
-                                dv = df.id
-                        st.session_state[sel_key] = dv
+                            default_meal = get_default_meal_for(selected_week, day_index)
+                            if default_meal:
+                                default_val = default_meal.id
+                        st.session_state[sel_key] = default_val
 
                     choice = st.selectbox(
                         "",
@@ -397,13 +409,17 @@ for r in range(rows):
                         price_key = f"price-w{selected_week}-d{day_index}-{mt}"
                         if price_key not in st.session_state:
                             st.session_state[price_key] = "0"
-                        st.text_input("Custom price (Rs.)", key=price_key, label_visibility="collapsed")
+                        st.text_input(
+                            "Custom price (Rs.)",
+                            key=price_key,
+                            label_visibility="collapsed",
+                        )
 
-                st.markdown("</div>", unsafe_allow_html=True)  # close card
+                st.markdown("</div>", unsafe_allow_html=True)  # close .day-card
 
             else:
-                # budgets framed card
-                st.markdown("<div class='card'>", unsafe_allow_html=True)
+                # Budgets card, same rectangular style
+                st.markdown("<div class='day-card'>", unsafe_allow_html=True)
                 st.markdown("<div class='budgets-title'>Budgets</div>", unsafe_allow_html=True)
 
                 budget_labels = {
@@ -422,15 +438,22 @@ for r in range(rows):
                     with right:
                         if f"budget-{key}" not in st.session_state:
                             st.session_state[f"budget-{key}"] = f"{float(DEFAULT_BUDGETS[key]):.2f}"
-                        st.markdown(f"<div class='budget-label'>{label}</div>", unsafe_allow_html=True)
-                        st.text_input("Budget (Rs.)", key=f"budget-{key}", label_visibility="collapsed")
+                        st.markdown(
+                            f"<div class='budget-label'>{label}</div>",
+                            unsafe_allow_html=True,
+                        )
+                        st.text_input(
+                            "Budget (Rs.)",
+                            key=f"budget-{key}",
+                            label_visibility="collapsed",
+                        )
 
-                st.markdown("</div>", unsafe_allow_html=True)
+                st.markdown("</div>", unsafe_allow_html=True)  # close .day-card
 
-        cell += 1
+        cell_index += 1
 
 # -------------------------
-# Cost summary below grid
+# Cost summary
 # -------------------------
 budgets = {}
 for k in DEFAULT_BUDGETS.keys():
@@ -442,23 +465,29 @@ sun_cost = sunday_total_cost_all_weeks()
 wd_cost = weekdays_total_cost_all_weeks()
 grand_cost = sun_cost + wd_cost
 
-st.markdown("")  # spacing
+st.markdown("")
 st.markdown("<div class='summary-frame'>", unsafe_allow_html=True)
-st.markdown("<div style='font-weight:700;margin-bottom:6px;color:#e6f7ff'>Cost Summary</div>", unsafe_allow_html=True)
+st.markdown(
+    "<div style='font-weight:700;margin-bottom:4px;color:#e0f2fe'>Cost Summary</div>",
+    unsafe_allow_html=True,
+)
 
 def summary_row(label: str, value: float, budget_key: str):
     diff_html = format_difference_html(value, budgets[budget_key])
     st.markdown(
-        f"<div style='display:flex;justify-content:space-between;margin-bottom:6px;'>"
-        f"<div style='color:#dff6ff'>{label}</div>"
-        f"<div style='font-weight:700;color:#bfe6ff'>Rs. {value:.2f}{diff_html}</div>"
+        f"<div style='display:flex;justify-content:space-between;margin-bottom:4px;'>"
+        f"<div style='color:#dbeafe'>{label}</div>"
+        f"<div style='font-weight:700;color:#bfdbfe'>Rs. {value:.2f}{diff_html}</div>"
         f"</div>",
         unsafe_allow_html=True,
     )
 
 summary_row("Current Week Total:", wk_cost, "weekly")
 summary_row("Sunday Total:", sun_cost, "sunday")
-st.markdown("<hr style='border-color:rgba(255,255,255,0.03);margin:6px 0;'/>", unsafe_allow_html=True)
+st.markdown(
+    "<hr style='border-color:rgba(148,163,184,0.5);margin:4px 0;'/>",
+    unsafe_allow_html=True,
+)
 summary_row("Weekdays Total:", wd_cost, "weekdays")
 summary_row("Grand Total:", grand_cost, "grandTotal")
 st.markdown("</div>", unsafe_allow_html=True)
