@@ -166,14 +166,14 @@ const breakfastBase = [BF_MEDU, BF_PONGAL, BF_SAMBAR, BF_CURD];
 
 /* Map of (week, dayIndex) -> special default breakfast */
 const specialBreakfastMap = {
-  '1-1': BF_PAV,  // Week1 Tue
-  '3-2': BF_PAV,  // Week3 Wed
+  '1-1': BF_PAV,   // Week1 Tue
+  '3-2': BF_PAV,   // Week3 Wed
   '1-3': BF_MAGGI, // Week1 Thu
-  '1-5': BF_ALU,  // Week1 Sat
-  '4-3': BF_ALU,  // Week4 Thu
-  '2-3': BF_MAC,  // Week2 Thu
-  '2-4': BF_MAC,  // Week2 Fri
-  '4-5': BF_DAAL  // Week4 Sat
+  '1-5': BF_ALU,   // Week1 Sat
+  '4-3': BF_ALU,   // Week4 Thu
+  '2-3': BF_MAC,   // Week2 Thu
+  '2-4': BF_MAC,   // Week2 Fri
+  '4-5': BF_DAAL   // Week4 Sat
 };
 
 /* Combined list for price lookup */
@@ -335,7 +335,6 @@ function makeGrid(){
       if(!(mainSelKey in state.weeks[week])) {
         state.weeks[week][mainSelKey] = defaultVal;
       } else if(mainType==='breakfast') {
-        // if user never changed this breakfast and value is 'skip', apply default
         if(defaultVal && state.weeks[week][mainSelKey] === 'skip' && !state.modified[mainSelKey]) {
           state.weeks[week][mainSelKey] = defaultVal;
         }
@@ -473,7 +472,18 @@ function makeGrid(){
   saveState();
 }
 
-/* ---------- Summary/calculation ---------- */
+/* ---------- Summary/calculation with coloured diff ---------- */
+function diffHtml(cost, budgetVal){
+  const b = parseFloat(budgetVal);
+  if(isNaN(b)) return '';
+  const diff = b - cost;
+  if(Math.abs(diff) < 0.005) return '';
+  const abs = Math.abs(diff).toFixed(2);
+  const text = diff > 0 ? `+ ${abs}` : `- ${abs}`;
+  const cls = diff > 0 ? 'diff-pos' : 'diff-neg';
+  return ` <span class="${cls}">(${text})</span>`;
+}
+
 function updateSummary(){
   const week = state.selectedWeek;
   let curWeek = 0;
@@ -486,7 +496,6 @@ function updateSummary(){
     const dsel = state.weeks[week][dk] || 'skip';
     curWeek += priceForSelection('dinner', dsel, week, d);
   }
-  document.getElementById('curWeekVal').innerText = 'Rs. '+curWeek.toFixed(2);
 
   let sunTotal=0;
   for(let w=1; w<=4; w++){
@@ -495,7 +504,6 @@ function updateSummary(){
     sunTotal += priceForSelection('lunch', s1, w, 6);
     sunTotal += priceForSelection('dinner', s2, w, 6);
   }
-  document.getElementById('sunTotalVal').innerText = 'Rs. '+sunTotal.toFixed(2);
 
   let weekdaysTotal=0;
   for(let w=1; w<=4; w++){
@@ -507,10 +515,23 @@ function updateSummary(){
       weekdaysTotal += priceForSelection('dinner', ds, w, d);
     }
   }
-  document.getElementById('wdTotalVal').innerText = 'Rs. '+weekdaysTotal.toFixed(2);
 
   const grand = weekdaysTotal + sunTotal;
-  document.getElementById('grandVal').innerText = 'Rs. '+grand.toFixed(2);
+
+  // Use budgets (editable in UI, defaults to 840/2140/3360/5500)
+  const bWeekly   = state.budgets.weekly   || DEFAULT_BUDGETS.weekly;
+  const bSunday   = state.budgets.sunday   || DEFAULT_BUDGETS.sunday;
+  const bWeekdays = state.budgets.weekdays || DEFAULT_BUDGETS.weekdays;
+  const bGrand    = state.budgets.grandTotal || DEFAULT_BUDGETS.grandTotal;
+
+  document.getElementById('curWeekVal').innerHTML =
+    'Rs. '+curWeek.toFixed(2) + diffHtml(curWeek, bWeekly);
+  document.getElementById('sunTotalVal').innerHTML =
+    'Rs. '+sunTotal.toFixed(2) + diffHtml(sunTotal, bSunday);
+  document.getElementById('wdTotalVal').innerHTML =
+    'Rs. '+weekdaysTotal.toFixed(2) + diffHtml(weekdaysTotal, bWeekdays);
+  document.getElementById('grandVal').innerHTML =
+    'Rs. '+grand.toFixed(2) + diffHtml(grand, bGrand);
 }
 
 /* ---------- Init ---------- */
