@@ -55,6 +55,7 @@ html = r"""
     }
     .day-title { font-weight:700; color:#3B82F6; font-size:16px; }
     .day-title.sunday { color:#F87171; }
+    .day-title.budgets { color:var(--text); }
 
     /* SMALL icon-only toggle button */
     .toggle-btn {
@@ -72,28 +73,14 @@ html = r"""
       padding:0;
     }
 
-    /* Section label now just holds an icon */
-    .section-label {
-      font-size:12px;
-      color:var(--muted);
-      margin:8px 0 6px 0;
-      display:flex;
-      align-items:center;
-      gap:6px;
+    /* We now show icons INSIDE the select box */
+    .select-wrapper {
+      position:relative;
+      margin:8px 0 4px 0;
     }
-
-    .meal-icon svg {
-      width:18px;
-      height:18px;
-      display:block;
-    }
-    .meal-icon-breakfast svg { color:#60A5FA; }
-    .meal-icon-lunch svg     { color:#FACC15; }
-    .meal-icon-dinner svg    { color:#C4B5FD; }
-
-    select, input[type="text"] {
+    .select-wrapper select {
       width:100%;
-      padding:10px 12px;
+      padding:10px 12px 10px 44px; /* extra left padding for icon */
       border-radius:8px;
       background: rgba(0,0,0,0.35);
       border:1px solid rgba(255,255,255,0.06);
@@ -101,6 +88,24 @@ html = r"""
       box-sizing:border-box;
       font-size:14px;
     }
+    .select-icon {
+      position:absolute;
+      left:12px;
+      top:50%;
+      transform:translateY(-50%);
+      pointer-events:none;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .select-icon svg {
+      width:22px;
+      height:22px;
+      display:block;
+    }
+    .select-icon-breakfast svg { color:#93C5FD; }
+    .select-icon-lunch svg     { color:#FDE047; }
+    .select-icon-dinner svg    { color:#C9A8EE; }
 
     /* Budgets rows: label on its own line, then input + button on one row */
     .budget-label { font-size:13px; color:var(--muted); margin:6px 0 4px 0; }
@@ -113,6 +118,13 @@ html = r"""
     }
     .budget-row input[type="text"] {
       flex:1;
+      padding:10px 12px;
+      border-radius:8px;
+      background: rgba(0,0,0,0.35);
+      border:1px solid rgba(255,255,255,0.06);
+      color:var(--text);
+      box-sizing:border-box;
+      font-size:14px;
     }
 
     .budget-default-btn {
@@ -278,7 +290,7 @@ function priceForSelection(mealType, sel, week, day){
 /* ---------- Icon helper ---------- */
 function createMealIcon(kind){
   const span = document.createElement('span');
-  span.className = 'meal-icon meal-icon-' + kind;
+  span.className = 'select-icon select-icon-' + kind;
   let svg = '';
   if(kind === 'breakfast'){
     // cup
@@ -346,11 +358,11 @@ function makeGrid(){
 
       const mainType = (day===6) ? 'lunch' : state.dayChoice[`${week}-w${day}`] || 'breakfast';
 
-      // ----- MAIN MEAL LABEL WITH ICON -----
-      const mainLabel = document.createElement('div'); 
-      mainLabel.className='section-label'; 
-      mainLabel.appendChild(createMealIcon(mainType));
-      card.appendChild(mainLabel);
+      // ----- MAIN MEAL SELECT WITH ICON -----
+      const mainWrapper = document.createElement('div');
+      mainWrapper.className = 'select-wrapper';
+      const mainIcon = createMealIcon(mainType);
+      mainWrapper.appendChild(mainIcon);
 
       const mainSelect = document.createElement('select');
       const mainSelKey = `sel-${week}-${day}-${mainType}`;
@@ -371,7 +383,7 @@ function makeGrid(){
           opts = lunchOptions;
         }
       } else {
-        // dinner-as-main (not typical, but just in case)
+        // dinner-as-main (rare)
         if(day === 6){
           opts = [];
         } else {
@@ -409,7 +421,8 @@ function makeGrid(){
         makeGrid();
         updateSummary();
       };
-      card.appendChild(mainSelect);
+      mainWrapper.appendChild(mainSelect);
+      card.appendChild(mainWrapper);
 
       if(state.weeks[week][mainSelKey] === 'custom') {
         const pk = `price-${week}-${day}-${mainType}`;
@@ -424,11 +437,11 @@ function makeGrid(){
         card.appendChild(input);
       }
 
-      // ----- DINNER LABEL WITH ICON -----
-      const dinnerLabel = document.createElement('div'); 
-      dinnerLabel.className='section-label'; 
-      dinnerLabel.appendChild(createMealIcon('dinner'));
-      card.appendChild(dinnerLabel);
+      // ----- DINNER SELECT WITH ICON -----
+      const dinnerWrapper = document.createElement('div');
+      dinnerWrapper.className = 'select-wrapper';
+      const dinnerIcon = createMealIcon('dinner');
+      dinnerWrapper.appendChild(dinnerIcon);
 
       const dinnerKey = `sel-${week}-${day}-dinner`;
       if(!(dinnerKey in state.weeks[week])) state.weeks[week][dinnerKey] = 'skip';
@@ -449,7 +462,7 @@ function makeGrid(){
         // Normal days: full dinner menu
         dinnerOptions.forEach(m => addD(m.id, `${m.name} (₹ ${m.price.toFixed(2)})`));
       }
-      // Sunday (day==6): only skip + custom, so no dinnerOptions
+      // Sunday: only skip + custom
 
       addD('custom','Custom price (type ₹)');
       dinnerSelect.onchange = (e)=>{
@@ -462,7 +475,8 @@ function makeGrid(){
         makeGrid();
         updateSummary();
       };
-      card.appendChild(dinnerSelect);
+      dinnerWrapper.appendChild(dinnerSelect);
+      card.appendChild(dinnerWrapper);
 
       if(state.weeks[week][dinnerKey] === 'custom'){
         const pk=`price-${week}-${day}-dinner`;
@@ -481,7 +495,7 @@ function makeGrid(){
     } else {
       // -------- Budgets card --------
       const hdr = document.createElement('div'); hdr.className='day-header';
-      const title = document.createElement('div'); title.className='day-title'; title.innerText='Budgets';
+      const title = document.createElement('div'); title.className='day-title budgets'; title.innerText='Budgets';
       hdr.appendChild(title);
       card.appendChild(hdr);
 
