@@ -166,26 +166,17 @@ const breakfastBase = [BF_MEDU, BF_PONGAL, BF_SAMBAR, BF_CURD];
 
 /* Map of (week, dayIndex) -> special default breakfast */
 const specialBreakfastMap = {
-  // Pav bhaji defaults
-  '1-1': BF_PAV, // week 1, Tuesday (dayIndex 1)
-  '3-2': BF_PAV, // week 3, Wednesday (2)
-
-  // Maggi default
-  '1-3': BF_MAGGI, // week 1, Thursday (3)
-
-  // Alu paratha defaults
-  '1-5': BF_ALU, // week 1, Saturday (5)
-  '4-3': BF_ALU, // week 4, Thursday (3)
-
-  // Macaroni defaults
-  '2-3': BF_MAC, // week 2, Thursday (3)
-  '2-4': BF_MAC, // week 2, Friday (4)
-
-  // Daal poori default
-  '4-5': BF_DAAL // week 4, Saturday (5)
+  '1-1': BF_PAV,  // Week1 Tue
+  '3-2': BF_PAV,  // Week3 Wed
+  '1-3': BF_MAGGI, // Week1 Thu
+  '1-5': BF_ALU,  // Week1 Sat
+  '4-3': BF_ALU,  // Week4 Thu
+  '2-3': BF_MAC,  // Week2 Thu
+  '2-4': BF_MAC,  // Week2 Fri
+  '4-5': BF_DAAL  // Week4 Sat
 };
 
-/* Combined list for price lookups (core + all specials) */
+/* Combined list for price lookup */
 const breakfastAll = [
   BF_MEDU, BF_PONGAL, BF_SAMBAR, BF_CURD,
   BF_PAV, BF_MAGGI, BF_ALU, BF_MAC, BF_DAAL
@@ -202,7 +193,7 @@ function getBreakfastConfig(week, dayIndex){
     };
   }
   return {
-    defaultId: null, // no auto default, will stay "Skip this meal"
+    defaultId: null,
     options: breakfastBase
   };
 }
@@ -231,8 +222,19 @@ const WEEK_DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 /* ---------- State ---------- */
 function loadState(){
   const raw = localStorage.getItem('mealsync_state');
-  if(raw) try { return JSON.parse(raw); } catch(e){}
-  const s = { selectedWeek:1, weeks:{}, dayChoice:{}, budgets:{} };
+  if(raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      if(!parsed.modified) parsed.modified = {};
+      if(!parsed.budgets) parsed.budgets = {};
+      if(!parsed.weeks) parsed.weeks = {};
+      for(let w=1; w<=4; w++){
+        if(!parsed.weeks[w]) parsed.weeks[w] = {};
+      }
+      return parsed;
+    } catch(e){}
+  }
+  const s = { selectedWeek:1, weeks:{}, dayChoice:{}, budgets:{}, modified:{} };
   for(let w=1;w<=4;w++) s.weeks[w] = {};
   for(const k in DEFAULT_BUDGETS) s.budgets[k] = DEFAULT_BUDGETS[k].toFixed(2);
   localStorage.setItem('mealsync_state', JSON.stringify(s));
@@ -329,9 +331,14 @@ function makeGrid(){
         opts = dinnerOptions;
       }
 
+      // apply defaults respecting "modified" flag
       if(!(mainSelKey in state.weeks[week])) {
         state.weeks[week][mainSelKey] = defaultVal;
-        saveState();
+      } else if(mainType==='breakfast') {
+        // if user never changed this breakfast and value is 'skip', apply default
+        if(defaultVal && state.weeks[week][mainSelKey] === 'skip' && !state.modified[mainSelKey]) {
+          state.weeks[week][mainSelKey] = defaultVal;
+        }
       }
 
       mainSelect.innerHTML = '';
@@ -346,6 +353,7 @@ function makeGrid(){
       addOption('custom','Custom price (type Rs.)');
       mainSelect.onchange = (e)=>{
         state.weeks[week][mainSelKey] = e.target.value;
+        state.modified[mainSelKey] = true; // user manually changed this main meal
         if(e.target.value==='custom'){
           const pk = `price-${week}-${day}-${mainType}`;
           if(!(pk in state.weeks[week])) state.weeks[week][pk] = '0';
@@ -511,6 +519,7 @@ function ensureStructure(){
     if(!state.weeks[w]) state.weeks[w] = {};
   }
   if(!state.budgets) state.budgets = {};
+  if(!state.modified) state.modified = {};
   saveState();
 }
 
