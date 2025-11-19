@@ -162,7 +162,7 @@ html = r"""
       z-index:1;
     }
 
-    /* CHANGED: allow wrapping so full text is visible */
+    /* allows full text to show, wrapping if needed */
     .meal-label{
       font-size:14px;
       color:#e5e7eb;
@@ -226,11 +226,23 @@ html = r"""
       margin-top:16px; border-radius:10px; padding:14px; background: #020617;
       border:1px solid rgba(30,64,175,0.12);
     }
-    .summary-row { display:flex; justify-content:space-between; margin-bottom:8px; }
-    .summary-row .val { font-weight:700; color:#bfe6ff; }
+    .summary-row {
+      display:flex;
+      justify-content:space-between;
+      margin-bottom:8px;
+    }
+    .summary-row .val {
+      font-weight:700;
+      color:#bfe6ff;
+    }
+    /* ensure label like "Current Week Total" stays on a single line */
+    .summary-row > div:first-child {
+      white-space: nowrap;
+    }
 
-    .diff-pos { color:var(--green); font-weight:600; }
-    .diff-neg { color:var(--red); font-weight:600; }
+    /* NOT bold for diff text */
+    .diff-pos { color:var(--green); font-weight:400; }
+    .diff-neg { color:var(--red);   font-weight:400; }
 
     .day-total-row{
       display:flex; justify-content:space-between; margin-top:8px; font-size:13px; color:#e5e7eb;
@@ -653,5 +665,5 @@ html = r"""
 </html>
 """
 
-# Higher height so everything scrolls nicely on mobile
+# High height so everything scrolls nicely on mobile
 components.html(html, height=1600, scrolling=True)
