@@ -61,8 +61,8 @@ html = r"""
       width:28px;
       height:28px;
       border-radius:999px;
-      border:1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.05);
+      border:1px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.06);
       cursor:pointer;
       display:flex;
       align-items:center;
@@ -79,15 +79,37 @@ html = r"""
       padding:10px 12px;
       border-radius:8px;
       background: rgba(0,0,0,0.35);
-      border:1px solid rgba(255,255,255,0.03);
+      border:1px solid rgba(255,255,255,0.06);
       color:var(--text);
       box-sizing:border-box;
       font-size:14px;
     }
 
-    .budget-row { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
-    .budget-row .btn { padding:6px 10px; border-radius:10px; border:1px solid rgba(255,255,255,0.04); background: rgba(255,255,255,0.02); cursor:pointer; min-width:72px; white-space:nowrap; }
-    .budget-row .label { font-size:13px; color:var(--muted); margin-bottom:4px; }
+    /* Budgets rows: label on its own line, then input + button on one row */
+    .budget-label { font-size:13px; color:var(--muted); margin:6px 0 4px 0; }
+
+    .budget-row {
+      display:flex;
+      gap:8px;
+      align-items:center;
+      margin-bottom:8px;
+    }
+    .budget-row input[type="text"] {
+      flex:1;
+    }
+
+    .budget-default-btn {
+      padding:6px 10px;
+      border-radius:10px;
+      min-width:80px;
+      white-space:nowrap;
+      cursor:pointer;
+      border:1px solid rgba(96,165,250,0.9);
+      background: radial-gradient(circle at top left, rgba(37,99,235,0.9), rgba(79,70,229,0.9));
+      color:#e5f2ff;
+      font-size:12px;
+      font-weight:600;
+    }
 
     .summary { margin-top:16px; border-radius:8px; padding:12px; background: rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.03); }
     .summary-row { display:flex; justify-content:space-between; margin-bottom:8px; }
@@ -334,8 +356,26 @@ function makeGrid(){
         {k:'grandTotal', label:'Grand Total'}
       ];
       keys.forEach(item=>{
-        const row = document.createElement('div'); row.className='budget-row';
-        const btn = document.createElement('button'); btn.className='btn'; btn.innerText='Default';
+        // label on its own line
+        const lab = document.createElement('div');
+        lab.className='budget-label';
+        lab.innerText = item.label;
+        card.appendChild(lab);
+
+        // row with input (left) + Default button (right)
+        const row = document.createElement('div');
+        row.className='budget-row';
+
+        if(!(item.k in state.budgets)) state.budgets[item.k] = DEFAULT_BUDGETS[item.k].toFixed(2);
+        const inp = document.createElement('input');
+        inp.type='text';
+        inp.value=state.budgets[item.k];
+        inp.oninput = (e)=>{ state.budgets[item.k] = e.target.value; saveState(); updateSummary(); };
+        row.appendChild(inp);
+
+        const btn = document.createElement('button');
+        btn.className='budget-default-btn';
+        btn.innerText='Default';
         btn.onclick = ()=>{
           state.budgets[item.k] = DEFAULT_BUDGETS[item.k].toFixed(2);
           saveState();
@@ -343,15 +383,7 @@ function makeGrid(){
           updateSummary();
         };
         row.appendChild(btn);
-        const right = document.createElement('div'); right.style.flex='1';
-        const lab = document.createElement('div'); lab.className='label'; lab.innerText = item.label;
-        lab.style.marginBottom='6px';
-        right.appendChild(lab);
-        if(!(item.k in state.budgets)) state.budgets[item.k] = DEFAULT_BUDGETS[item.k].toFixed(2);
-        const inp = document.createElement('input'); inp.type='text'; inp.value=state.budgets[item.k];
-        inp.oninput = (e)=>{ state.budgets[item.k] = e.target.value; saveState(); updateSummary(); };
-        right.appendChild(inp);
-        row.appendChild(right);
+
         card.appendChild(row);
       });
     }
