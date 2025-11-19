@@ -56,7 +56,21 @@ html = r"""
     .day-title { font-weight:700; color:var(--text); font-size:16px; }
     .day-title.sunday { color:#ffd6d8; }
 
-    .toggle-btn { padding:6px 10px; border-radius:18px; border:1px solid rgba(255,255,255,0.04); background: rgba(255,255,255,0.02); cursor:pointer; font-size:13px; }
+    /* SMALL icon-only toggle button */
+    .toggle-btn {
+      width:28px;
+      height:28px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05);
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:16px;
+      color:var(--muted);
+      padding:0;
+    }
 
     .section-label { font-size:12px; color:var(--muted); margin:8px 0 6px 0; text-transform:uppercase; letter-spacing:0.06em; }
 
@@ -79,12 +93,10 @@ html = r"""
     .summary-row { display:flex; justify-content:space-between; margin-bottom:8px; }
     .summary-row .val { font-weight:700; color:#bfe6ff; }
 
-    /* small helpers */
     .muted { color:var(--muted); font-size:13px; }
     .diff-pos { color:var(--green); font-weight:600; }
     .diff-neg { color:var(--red); font-weight:600; }
 
-    /* make inputs not show spinner on number type when used */
     input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
   </style>
 </head>
@@ -150,23 +162,12 @@ const DEFAULT_BUDGETS = {
 
 const WEEK_DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
-/* ---------- State ---------- 
- We'll store everything in localStorage under "mealsync_state"
- Structure:
- {
-   selectedWeek: 1..4,
-   weeks: { "1": { "w0-d0": {main:'medu', dinner:'d1', ...}, ... }, "2": {...} ... },
-   dayChoice: { "1-w0": "breakfast" or "lunch", ... },
-   budgets: { weekly: "840.00", sunday: "2140.00", ... }  // strings
- }
-*/
+/* ---------- State ---------- */
 function loadState(){
   const raw = localStorage.getItem('mealsync_state');
   if(raw) try { return JSON.parse(raw); } catch(e){}
-  // new state
   const s = { selectedWeek:1, weeks:{}, dayChoice:{}, budgets:{} };
   for(let w=1;w<=4;w++) s.weeks[w] = {};
-  // init budgets as strings
   for(const k in DEFAULT_BUDGETS) s.budgets[k] = DEFAULT_BUDGETS[k].toFixed(2);
   localStorage.setItem('mealsync_state', JSON.stringify(s));
   return s;
@@ -212,26 +213,24 @@ function makeGrid(){
   grid.innerHTML = '';
   const week = state.selectedWeek;
 
-  // create 8 cells (7 days + 1 budgets)
   for(let cell=0; cell<8; cell++){
     const card = document.createElement('div');
     card.className = 'card';
     if(cell<7){
       const day = cell;
-      // header row
       const hdr = document.createElement('div'); hdr.className='day-header';
       const title = document.createElement('div'); title.className='day-title';
       title.innerText = WEEK_DAYS[day];
       if(day===6) title.className += ' sunday';
       hdr.appendChild(title);
 
-      // toggle button (only Mon-Sat)
       if(day!==6){
         const key = `${week}-w${day}`;
         if(!state.dayChoice[key]) state.dayChoice[key]='breakfast';
         const tbtn = document.createElement('button');
         tbtn.className='toggle-btn';
-        tbtn.innerText = (state.dayChoice[key]==='breakfast' ? '☕ Breakfast — click to switch' : '🍛 Lunch — click to switch');
+        tbtn.innerText='⇄';          // arrow only, no text
+        tbtn.title='Toggle breakfast / lunch';
         tbtn.onclick = ()=>{
           state.dayChoice[key] = (state.dayChoice[key]==='breakfast' ? 'lunch' : 'breakfast');
           saveState();
@@ -242,18 +241,14 @@ function makeGrid(){
       }
       card.appendChild(hdr);
 
-      // now inside the same card: sections for main meal and dinner
       const mainType = (day===6) ? 'lunch' : state.dayChoice[`${week}-w${day}`] || 'breakfast';
 
-      // MAIN meal
       const mainLabel = document.createElement('div'); mainLabel.className='section-label'; mainLabel.innerText = mainType.toUpperCase();
       card.appendChild(mainLabel);
 
       const mainSelect = document.createElement('select');
       const mainSelKey = `sel-${week}-${day}-${mainType}`;
-      // ensure entry exists
       if(!state.weeks[week][mainSelKey]) {
-        // set default (for breakfast maybe default meal)
         let def = 'skip';
         if(mainType==='breakfast'){
           const d = getDefaultFor(week, day);
@@ -262,7 +257,6 @@ function makeGrid(){
         state.weeks[week][mainSelKey] = def;
         saveState();
       }
-      // options
       const opts = (mainType==='breakfast') ? breakfastOptions : (mainType==='lunch' ? lunchOptions : dinnerOptions);
       mainSelect.innerHTML = '';
       const addOption = (value, label) => {
@@ -273,7 +267,6 @@ function makeGrid(){
       addOption('custom','Custom price (type Rs.)');
       mainSelect.onchange = (e)=>{
         state.weeks[week][mainSelKey] = e.target.value;
-        // if custom, create price key with default 0
         if(e.target.value==='custom'){
           const pk = `price-${week}-${day}-${mainType}`;
           if(!(pk in state.weeks[week])) state.weeks[week][pk] = '0';
@@ -284,7 +277,6 @@ function makeGrid(){
       };
       card.appendChild(mainSelect);
 
-      // custom price input if needed
       if(state.weeks[week][mainSelKey] === 'custom') {
         const pk = `price-${week}-${day}-${mainType}`;
         if(!(pk in state.weeks[week])) state.weeks[week][pk] = '0';
@@ -298,8 +290,7 @@ function makeGrid(){
         card.appendChild(input);
       }
 
-      // DINNER
-      const dinnerLabel = document.createElement('div'); dinnerLabel.className='section-label'; dinnerLabel.innerText = 'dinner'.toUpperCase();
+      const dinnerLabel = document.createElement('div'); dinnerLabel.className='section-label'; dinnerLabel.innerText = 'DINNER';
       card.appendChild(dinnerLabel);
       const dinnerKey = `sel-${week}-${day}-dinner`;
       if(!state.weeks[week][dinnerKey]) state.weeks[week][dinnerKey] = 'skip';
@@ -330,13 +321,12 @@ function makeGrid(){
       }
 
     } else {
-      // budgets card (cell 7)
+      // budgets card
       const hdr = document.createElement('div'); hdr.className='day-header';
       const title = document.createElement('div'); title.className='day-title'; title.innerText='Budgets';
       hdr.appendChild(title);
       card.appendChild(hdr);
 
-      // Budget rows: Default button left, input right
       const keys = [
         {k:'weekly', label:'Week Total'},
         {k:'sunday', label:'Sunday Total (all 4 weeks)'},
@@ -344,9 +334,7 @@ function makeGrid(){
         {k:'grandTotal', label:'Grand Total'}
       ];
       keys.forEach(item=>{
-        // row container
         const row = document.createElement('div'); row.className='budget-row';
-        // button
         const btn = document.createElement('button'); btn.className='btn'; btn.innerText='Default';
         btn.onclick = ()=>{
           state.budgets[item.k] = DEFAULT_BUDGETS[item.k].toFixed(2);
@@ -355,13 +343,11 @@ function makeGrid(){
           updateSummary();
         };
         row.appendChild(btn);
-        // right column with label+input
         const right = document.createElement('div'); right.style.flex='1';
         const lab = document.createElement('div'); lab.className='label'; lab.innerText = item.label;
         lab.style.marginBottom='6px';
         right.appendChild(lab);
-        const key = `budget-${item.k}`;
-        if(!(key in state.budgets)) state.budgets[item.k] = DEFAULT_BUDGETS[item.k].toFixed(2);
+        if(!(item.k in state.budgets)) state.budgets[item.k] = DEFAULT_BUDGETS[item.k].toFixed(2);
         const inp = document.createElement('input'); inp.type='text'; inp.value=state.budgets[item.k];
         inp.oninput = (e)=>{ state.budgets[item.k] = e.target.value; saveState(); updateSummary(); };
         right.appendChild(inp);
@@ -378,23 +364,19 @@ function makeGrid(){
 
 /* ---------- Summary/calculation ---------- */
 function updateSummary(){
-  // Current week total: sum mon-sat main + dinner for selectedWeek
   const week = state.selectedWeek;
   let curWeek = 0;
   for(let d=0; d<6; d++){
-    // main type
     const mainType = (d===6) ? 'lunch' : (state.dayChoice[`${week}-w${d}`] || 'breakfast');
     const selKey = `sel-${week}-${d}-${mainType}`;
     const sel = state.weeks[week][selKey] || 'skip';
     curWeek += priceForSelection(mainType, sel, week, d);
-    // dinner
     const dk = `sel-${week}-${d}-dinner`;
     const dsel = state.weeks[week][dk] || 'skip';
     curWeek += priceForSelection('dinner', dsel, week, d);
   }
   document.getElementById('curWeekVal').innerText = 'Rs. '+curWeek.toFixed(2);
 
-  // Sunday total: sum Sunday for all weeks (lunch+dinner each)
   let sunTotal=0;
   for(let w=1; w<=4; w++){
     const s1 = state.weeks[w][`sel-${w}-6-lunch`] || 'skip';
@@ -404,7 +386,6 @@ function updateSummary(){
   }
   document.getElementById('sunTotalVal').innerText = 'Rs. '+sunTotal.toFixed(2);
 
-  // Weekdays total (Mon-Sat) across 4 weeks
   let weekdaysTotal=0;
   for(let w=1; w<=4; w++){
     for(let d=0; d<6; d++){
@@ -419,14 +400,10 @@ function updateSummary(){
 
   const grand = weekdaysTotal + sunTotal;
   document.getElementById('grandVal').innerText = 'Rs. '+grand.toFixed(2);
-
-  // also optionally show difference next to values comparing budgets
-  // (not shown inline here, but we kept budgets storage for comparisons)
 }
 
 /* ---------- Init ---------- */
 function ensureStructure(){
-  // make sure each week object has keys for all selects defaulted to skip so calculations straightforward
   for(let w=1; w<=4; w++){
     const wk = state.weeks[w] || {};
     for(let d=0; d<7; d++){
@@ -449,8 +426,6 @@ ensureStructure();
 makeWeekButtons();
 makeGrid();
 updateSummary();
-
-/* helpful: expose state to window for debugging (remove in prod) */
 window.mealsyncState = state;
 </script>
 </body>
