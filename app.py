@@ -21,16 +21,17 @@ html = r"""
       --text:#e6eef8;
       font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
     }
+
     html,body {
       height:100%;
       margin:0;
       padding:0;
-      background: #020617;
+      background: var(--bg);
       color:var(--text);
     }
-    .container { max-width:1200px; margin:18px auto; padding:18px; }
 
-    /* Heading tuned to match rest of UI */
+    .container { max-width:1200px; margin:18px auto; padding:18px; box-sizing:border-box; }
+
     h1 {
       text-align:center;
       color:#38bdf8;
@@ -41,7 +42,17 @@ html = r"""
     }
     p.subtitle { text-align:center; color: #9aaec0; margin:0 0 18px 0; }
 
-    .week-row { display:flex; justify-content:center; gap:12px; margin:18px 0 18px 0; flex-wrap:wrap; }
+    /* Week selector */
+    .week-row {
+      display:flex;
+      justify-content:center;
+      gap:12px;
+      margin:18px 0 18px 0;
+      flex-wrap:nowrap;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      padding-bottom:6px;
+    }
     .week-btn {
       padding:8px 18px;
       border-radius:10px;
@@ -50,6 +61,7 @@ html = r"""
       color:var(--text);
       cursor:pointer;
       font-size:14px;
+      flex:0 0 auto;
     }
     .week-btn.active {
       background: var(--accent);
@@ -57,25 +69,42 @@ html = r"""
       border-color:#1D4ED8;
     }
 
-    /* 2x4 grid */
+    /* 2x4 grid by default */
     .grid {
       display:grid;
       grid-template-columns:repeat(4,1fr);
       gap:18px;
       margin-top:8px;
     }
-    @media (max-width: 900px){
+
+    /* Responsive breakpoints */
+    @media (max-width: 1100px) {
       .grid { grid-template-columns:repeat(2,1fr); }
     }
+    @media (max-width: 600px) {
+      .container { padding:12px; max-width:100%; }
+      h1 { font-size:26px; margin-bottom:6px; }
+      .grid { grid-template-columns:1fr; gap:12px; }
+      .week-row { gap:8px; margin:12px 0; }
+      .week-btn { padding:7px 12px; font-size:13px; }
+    }
 
-    /* day / budgets cards */
+    /* Cards (shared look) */
     .card {
       background: var(--card-inner);
       border-radius:12px;
       border:1px solid rgba(31,41,55,0.9);
       padding: 14px;
       box-sizing:border-box;
-      height: 310px;           /* reduced height for less empty space */
+      height: 310px;
+      display:flex;
+      flex-direction:column;
+      justify-content:flex-start;
+    }
+
+    /* On small screens make card height auto so content flows naturally */
+    @media (max-width: 600px) {
+      .card { height: auto; min-height: 220px; padding:12px; }
     }
 
     .day-header {
@@ -106,6 +135,7 @@ html = r"""
       color:#9ca3af;
       padding:0;
     }
+    @media (max-width:600px){ .toggle-btn{ width:28px; height:28px; font-size:14px; } }
 
     /* Meal rows styled */
     .meal-row {
@@ -118,7 +148,13 @@ html = r"""
       border-radius:10px;
       background: #020617;
       border:1px solid rgba(51,65,85,0.9);
+      box-sizing:border-box;
+      min-height:48px;
     }
+    @media (max-width:600px){
+      .meal-row { padding:10px; min-height:46px; }
+    }
+
     .meal-row-inner{
       display:flex;
       align-items:center;
@@ -129,11 +165,15 @@ html = r"""
       font-size:14px;
       color:#e5e7eb;
       white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width:calc(100% - 40px);
     }
     .meal-label.muted{
       color:#9ca3af;
     }
 
+    /* Invisible select overlay so the text stays visible but native control works */
     .meal-select {
       position:absolute;
       inset:0;
@@ -149,8 +189,8 @@ html = r"""
     }
 
     .select-icon svg {
-      width:22px;
-      height:22px;
+      width:24px;
+      height:24px;
       display:block;
     }
     .select-icon-breakfast svg { color:#93C5FD; }
@@ -180,6 +220,7 @@ html = r"""
       background:#020617;
       color:#e5e7eb;
       font-size:13px;
+      margin-top:8px;
     }
 
     .summary {
@@ -196,6 +237,9 @@ html = r"""
       display:flex; justify-content:space-between; margin-top:8px; font-size:13px; color:#e5e7eb;
     }
 
+    /* hide focus outline for the invisible select overlay for nicer look on mobile */
+    .meal-select:focus { outline: none; }
+
     input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
   </style>
 </head>
@@ -204,12 +248,12 @@ html = r"""
   <h1>MealSync</h1>
   <p class="subtitle">Your weekly meal planning, simplified.</p>
 
-  <div class="week-row" id="weekRow"></div>
+  <div class="week-row" id="weekRow" aria-label="Week selector"></div>
   <div style="height:10px;"></div>
   <div class="grid" id="grid" aria-live="polite"></div>
 
   <div style="height:12px;"></div>
-  <div class="summary" id="summary">
+  <div class="summary" id="summary" role="region" aria-label="Cost summary">
     <div style="font-weight:700; margin-bottom:8px;">Cost Summary</div>
     <div class="summary-row"><div>Current Week Total:</div><div class="val" id="curWeekVal">₹ 0.00</div></div>
     <div class="summary-row"><div>Sunday Total:</div><div class="val" id="sunTotalVal">₹ 0.00</div></div>
@@ -221,6 +265,7 @@ html = r"""
 
 <script>
 (function() {
+  /* ---------- Data ---------- */
   const BF_MEDU   = {id:'medu',  name:'Medu vada',    price:20};
   const BF_PONGAL = {id:'pongal',name:'Pongal',       price:25};
   const BF_SAMBAR = {id:'sambar',name:'Sambar vada',  price:32};
@@ -254,6 +299,7 @@ html = r"""
   const DEFAULT_BUDGETS = { weekly:840, sunday:2140, weekdays:3360, grandTotal:5500 };
   const WEEK_DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
+  /* ---------- localStorage state helpers ---------- */
   function loadState(){
     const raw = localStorage.getItem('mealsync_state');
     if(raw){
@@ -426,7 +472,6 @@ html = r"""
           input.type = 'text';
           input.value = state.weeks[week][pk];
           input.className = 'custom-input';
-          input.style.marginTop = '8px';
           input.oninput = (e) => { state.weeks[week][pk] = e.target.value; saveState(); updateSummary(); };
           card.appendChild(input);
         }
@@ -473,7 +518,6 @@ html = r"""
           input.type = 'text';
           input.value = state.weeks[week][pk];
           input.className = 'custom-input';
-          input.style.marginTop = '8px';
           input.oninput = (e) => { state.weeks[week][pk] = e.target.value; saveState(); updateSummary(); };
           card.appendChild(input);
         }
@@ -503,7 +547,7 @@ html = r"""
         if(dinnerSelVal==='skip') dinnerLabel.classList.add('muted');
 
       } else {
-        // Budgets card
+        /* Budgets card */
         const hdr = document.createElement('div'); hdr.className='day-header';
         const title = document.createElement('div'); title.className='day-title budgets'; title.innerText='Budgets';
         hdr.appendChild(title);
@@ -610,4 +654,5 @@ html = r"""
 </html>
 """
 
-components.html(html, height=1100, scrolling=True)
+# higher iframe height allows scrolling on mobile; value can be adjusted if you want it smaller
+components.html(html, height=1600, scrolling=True)
