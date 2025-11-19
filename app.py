@@ -75,7 +75,7 @@ html = r"""
       border:1px solid rgba(31,41,55,0.9);
       padding: 14px;
       box-sizing:border-box;
-      height: 400px;           /* taller so 2 custom inputs fit inside */
+      height: 400px;           /* tall enough for 2 custom inputs */
     }
 
     .day-header {
@@ -168,6 +168,18 @@ html = r"""
     .budget-default-btn {
       padding:7px 10px; border-radius:999px; min-width:80px; white-space:nowrap; cursor:pointer;
       border:1px solid #1D4ED8; background: #2563EB; color:#e5f2ff; font-size:12px; font-weight:600;
+    }
+
+    /* Custom price input inside day cards */
+    .custom-input {
+      width:100%;
+      box-sizing:border-box;
+      padding:8px 10px;
+      border-radius:8px;
+      border:1px solid rgba(51,65,85,0.9);
+      background:#020617;
+      color:#e5e7eb;
+      font-size:13px;
     }
 
     .summary {
@@ -412,11 +424,11 @@ html = r"""
           const pk = `price-${week}-${day}-${mainType}`;
           if(!(pk in state.weeks[week])) state.weeks[week][pk] = '0';
           const input = document.createElement('input');
-          input.type = 'text'; input.value = state.weeks[week][pk];
+          input.type = 'text';
+          input.value = state.weeks[week][pk];
+          input.className = 'custom-input';
+          input.style.marginTop = '8px';
           input.oninput = (e) => { state.weeks[week][pk] = e.target.value; saveState(); updateSummary(); };
-          input.style.marginTop = '8px'; input.style.width = '100%'; input.style.padding = '8px 10px';
-          input.style.borderRadius = '8px'; input.style.border = '1px solid rgba(51,65,85,0.9)';
-          input.style.background = '#020617'; input.style.color = '#e5e7eb';
           card.appendChild(input);
         }
 
@@ -459,11 +471,11 @@ html = r"""
           const pk = `price-${week}-${day}-dinner`;
           if(!(pk in state.weeks[week])) state.weeks[week][pk] = '0';
           const input = document.createElement('input');
-          input.type = 'text'; input.value = state.weeks[week][pk];
+          input.type = 'text';
+          input.value = state.weeks[week][pk];
+          input.className = 'custom-input';
+          input.style.marginTop = '8px';
           input.oninput = (e) => { state.weeks[week][pk] = e.target.value; saveState(); updateSummary(); };
-          input.style.marginTop = '8px'; input.style.width = '100%'; input.style.padding = '8px 10px';
-          input.style.borderRadius = '8px'; input.style.border = '1px solid rgba(51,65,85,0.9)';
-          input.style.background = '#020617'; input.style.color = '#e5e7eb';
           card.appendChild(input);
         }
 
