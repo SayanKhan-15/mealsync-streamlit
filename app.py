@@ -29,7 +29,16 @@ html = r"""
       color:var(--text);
     }
     .container { max-width:1200px; margin:18px auto; padding:18px; }
-    h1 { text-align:center; color:#38bdf8; font-size:36px; margin:0 0 6px 0; font-weight:800; }
+
+    /* Heading tuned to match rest of UI */
+    h1 {
+      text-align:center;
+      color:#38bdf8;
+      font-size:32px;
+      margin:0 0 6px 0;
+      font-weight:700;
+      letter-spacing:0.04em;
+    }
     p.subtitle { text-align:center; color: #9aaec0; margin:0 0 18px 0; }
 
     .week-row { display:flex; justify-content:center; gap:12px; margin:18px 0 18px 0; flex-wrap:wrap; }
@@ -66,7 +75,7 @@ html = r"""
       border:1px solid rgba(31,41,55,0.9);
       padding: 14px;
       box-sizing:border-box;
-      height: 320px;           /* equal height for all 8 cards */
+      height: 400px;           /* taller so 2 custom inputs fit inside */
     }
 
     .day-header {
@@ -199,7 +208,7 @@ html = r"""
 </div>
 
 <script>
-/* ---------- Data ---------- */
+/* ---------- Data + app code wrapped to avoid globals ---------- */
 (function() {
   const BF_MEDU   = {id:'medu',  name:'Medu vada',    price:20};
   const BF_PONGAL = {id:'pongal',name:'Pongal',       price:25};
@@ -234,7 +243,6 @@ html = r"""
   const DEFAULT_BUDGETS = { weekly:840, sunday:2140, weekdays:3360, grandTotal:5500 };
   const WEEK_DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
-  /* ---------- State (localStorage) ---------- */
   function loadState(){
     const raw = localStorage.getItem('mealsync_state');
     if(raw){
@@ -255,7 +263,6 @@ html = r"""
   }
   function saveState(){ localStorage.setItem('mealsync_state', JSON.stringify(state)); }
 
-  /* ---------- Helpers ---------- */
   function priceForSelection(mealType, sel, week, day){
     if(sel==='skip') return 0;
     if(sel==='custom'){
@@ -292,7 +299,6 @@ html = r"""
     return ` <span class="${cls}">(${text})</span>`;
   }
 
-  /* ---------- Rendering functions ---------- */
   const state = loadState();
 
   function makeWeekButtons(){
@@ -579,7 +585,6 @@ html = r"""
     saveState();
   }
 
-  // Initialize after DOM ready
   window.addEventListener('DOMContentLoaded', function(){
     ensureStructure();
     makeWeekButtons();
@@ -588,11 +593,10 @@ html = r"""
     window.mealsyncState = state;
   });
 
-})(); /* end IIFE */
+})();
 </script>
 </body>
 </html>
 """
 
-# make the embedded frame taller so the grid + summary fits
-components.html(html, height=1100, scrolling=True)
+components.html(html, height=1150, scrolling=True)
