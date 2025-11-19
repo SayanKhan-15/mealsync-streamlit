@@ -137,11 +137,11 @@ html = r"""
 
   <div class="summary" id="summary">
     <div style="font-weight:700; margin-bottom:8px;">Cost Summary</div>
-    <div class="summary-row"><div>Current Week Total:</div><div class="val" id="curWeekVal">Rs. 0.00</div></div>
-    <div class="summary-row"><div>Sunday Total:</div><div class="val" id="sunTotalVal">Rs. 0.00</div></div>
+    <div class="summary-row"><div>Current Week Total:</div><div class="val" id="curWeekVal">₹ 0.00</div></div>
+    <div class="summary-row"><div>Sunday Total:</div><div class="val" id="sunTotalVal">₹ 0.00</div></div>
     <hr style="border-color:rgba(255,255,255,0.04)"/>
-    <div class="summary-row"><div>Weekdays Total:</div><div class="val" id="wdTotalVal">Rs. 0.00</div></div>
-    <div class="summary-row"><div>Grand Total:</div><div class="val" id="grandVal">Rs. 0.00</div></div>
+    <div class="summary-row"><div>Weekdays Total:</div><div class="val" id="wdTotalVal">₹ 0.00</div></div>
+    <div class="summary-row"><div>Grand Total:</div><div class="val" id="grandVal">₹ 0.00</div></div>
   </div>
 
 </div>
@@ -321,14 +321,25 @@ function makeGrid(){
       // determine options & default for MAIN
       let opts;
       let defaultVal = 'skip';
+
       if(mainType==='breakfast'){
         const cfg = getBreakfastConfig(week, day);
         opts = cfg.options;
         if(cfg.defaultId) defaultVal = cfg.defaultId;
       } else if(mainType==='lunch'){
-        opts = lunchOptions;
+        // Sunday lunch: only skip + custom
+        if(day === 6){
+          opts = []; // no fixed options
+        } else {
+          opts = lunchOptions;
+        }
       } else {
-        opts = dinnerOptions;
+        // dinner handled later; for mainType 'dinner' (only if we ever used it as main)
+        if(day === 6){
+          opts = []; // Sunday main 'dinner' would also be skip/custom only
+        } else {
+          opts = dinnerOptions;
+        }
       }
 
       // apply defaults respecting "modified" flag
@@ -348,8 +359,8 @@ function makeGrid(){
         mainSelect.appendChild(o);
       };
       addOption('skip','Skip this meal');
-      opts.forEach(m => addOption(m.id, `${m.name} (Rs. ${m.price.toFixed(2)})`));
-      addOption('custom','Custom price (type Rs.)');
+      opts.forEach(m => addOption(m.id, `${m.name} (₹ ${m.price.toFixed(2)})`));
+      addOption('custom','Custom price (type ₹)');
       mainSelect.onchange = (e)=>{
         state.weeks[week][mainSelKey] = e.target.value;
         state.modified[mainSelKey] = true; // user manually changed this main meal
@@ -387,15 +398,23 @@ function makeGrid(){
 
       const dinnerSelect = document.createElement('select');
       dinnerSelect.innerHTML = '';
+
       const addD = (v,l)=>{ 
         const o=document.createElement('option'); 
         o.value=v; o.innerText=l; 
         if(state.weeks[week][dinnerKey]===v) o.selected=true; 
         dinnerSelect.appendChild(o); 
       };
+
       addD('skip','Skip this meal');
-      dinnerOptions.forEach(m => addD(m.id, `${m.name} (Rs. ${m.price.toFixed(2)})`));
-      addD('custom','Custom price (type Rs.)');
+
+      if(day !== 6){
+        // Normal days: full dinner menu
+        dinnerOptions.forEach(m => addD(m.id, `${m.name} (₹ ${m.price.toFixed(2)})`));
+      }
+      // Sunday (day==6): only skip + custom, so we don't add dinnerOptions
+
+      addD('custom','Custom price (type ₹)');
       dinnerSelect.onchange = (e)=>{
         state.weeks[week][dinnerKey] = e.target.value;
         if(e.target.value==='custom'){
@@ -518,20 +537,19 @@ function updateSummary(){
 
   const grand = weekdaysTotal + sunTotal;
 
-  // Use budgets (editable in UI, defaults to 840/2140/3360/5500)
-  const bWeekly   = state.budgets.weekly   || DEFAULT_BUDGETS.weekly;
-  const bSunday   = state.budgets.sunday   || DEFAULT_BUDGETS.sunday;
-  const bWeekdays = state.budgets.weekdays || DEFAULT_BUDGETS.weekdays;
+  const bWeekly   = state.budgets.weekly    || DEFAULT_BUDGETS.weekly;
+  const bSunday   = state.budgets.sunday    || DEFAULT_BUDGETS.sunday;
+  const bWeekdays = state.budgets.weekdays  || DEFAULT_BUDGETS.weekdays;
   const bGrand    = state.budgets.grandTotal || DEFAULT_BUDGETS.grandTotal;
 
   document.getElementById('curWeekVal').innerHTML =
-    'Rs. '+curWeek.toFixed(2) + diffHtml(curWeek, bWeekly);
+    '₹ '+curWeek.toFixed(2) + diffHtml(curWeek, bWeekly);
   document.getElementById('sunTotalVal').innerHTML =
-    'Rs. '+sunTotal.toFixed(2) + diffHtml(sunTotal, bSunday);
+    '₹ '+sunTotal.toFixed(2) + diffHtml(sunTotal, bSunday);
   document.getElementById('wdTotalVal').innerHTML =
-    'Rs. '+weekdaysTotal.toFixed(2) + diffHtml(weekdaysTotal, bWeekdays);
+    '₹ '+weekdaysTotal.toFixed(2) + diffHtml(weekdaysTotal, bWeekdays);
   document.getElementById('grandVal').innerHTML =
-    'Rs. '+grand.toFixed(2) + diffHtml(grand, bGrand);
+    '₹ '+grand.toFixed(2) + diffHtml(grand, bGrand);
 }
 
 /* ---------- Init ---------- */
