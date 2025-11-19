@@ -53,8 +53,8 @@ html = r"""
       align-items:center;
       margin-bottom:8px;
     }
-    .day-title { font-weight:700; color:var(--text); font-size:16px; }
-    .day-title.sunday { color:#ffd6d8; }
+    .day-title { font-weight:700; color:#3B82F6; font-size:16px; }
+    .day-title.sunday { color:#F87171; }
 
     /* SMALL icon-only toggle button */
     .toggle-btn {
@@ -72,7 +72,24 @@ html = r"""
       padding:0;
     }
 
-    .section-label { font-size:12px; color:var(--muted); margin:8px 0 6px 0; text-transform:uppercase; letter-spacing:0.06em; }
+    /* Section label now just holds an icon */
+    .section-label {
+      font-size:12px;
+      color:var(--muted);
+      margin:8px 0 6px 0;
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
+
+    .meal-icon svg {
+      width:18px;
+      height:18px;
+      display:block;
+    }
+    .meal-icon-breakfast svg { color:#60A5FA; }
+    .meal-icon-lunch svg     { color:#FACC15; }
+    .meal-icon-dinner svg    { color:#C4B5FD; }
 
     select, input[type="text"] {
       width:100%;
@@ -258,6 +275,26 @@ function priceForSelection(mealType, sel, week, day){
   return found ? found.price : 0;
 }
 
+/* ---------- Icon helper ---------- */
+function createMealIcon(kind){
+  const span = document.createElement('span');
+  span.className = 'meal-icon meal-icon-' + kind;
+  let svg = '';
+  if(kind === 'breakfast'){
+    // cup
+    svg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h13a3 3 0 0 0 0-6H4v6z"/><path d="M17 4v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V4"/><line x1="6" y1="18" x2="16" y2="18"/><line x1="8" y1="22" x2="14" y2="22"/></svg>';
+  } else if(kind === 'lunch'){
+    // sun
+    svg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.07" y2="4.93"/></svg>';
+  } else {
+    // moon
+    svg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+  }
+  span.innerHTML = svg;
+  span.title = kind.charAt(0).toUpperCase() + kind.slice(1);
+  return span;
+}
+
 /* ---------- Rendering ---------- */
 const state = loadState();
 
@@ -309,10 +346,10 @@ function makeGrid(){
 
       const mainType = (day===6) ? 'lunch' : state.dayChoice[`${week}-w${day}`] || 'breakfast';
 
-      // ----- MAIN MEAL -----
+      // ----- MAIN MEAL LABEL WITH ICON -----
       const mainLabel = document.createElement('div'); 
       mainLabel.className='section-label'; 
-      mainLabel.innerText = mainType.toUpperCase();
+      mainLabel.appendChild(createMealIcon(mainType));
       card.appendChild(mainLabel);
 
       const mainSelect = document.createElement('select');
@@ -334,9 +371,9 @@ function makeGrid(){
           opts = lunchOptions;
         }
       } else {
-        // dinner handled later; for mainType 'dinner' (only if we ever used it as main)
+        // dinner-as-main (not typical, but just in case)
         if(day === 6){
-          opts = []; // Sunday main 'dinner' would also be skip/custom only
+          opts = [];
         } else {
           opts = dinnerOptions;
         }
@@ -387,10 +424,10 @@ function makeGrid(){
         card.appendChild(input);
       }
 
-      // ----- DINNER -----
+      // ----- DINNER LABEL WITH ICON -----
       const dinnerLabel = document.createElement('div'); 
       dinnerLabel.className='section-label'; 
-      dinnerLabel.innerText = 'DINNER';
+      dinnerLabel.appendChild(createMealIcon('dinner'));
       card.appendChild(dinnerLabel);
 
       const dinnerKey = `sel-${week}-${day}-dinner`;
@@ -412,7 +449,7 @@ function makeGrid(){
         // Normal days: full dinner menu
         dinnerOptions.forEach(m => addD(m.id, `${m.name} (₹ ${m.price.toFixed(2)})`));
       }
-      // Sunday (day==6): only skip + custom, so we don't add dinnerOptions
+      // Sunday (day==6): only skip + custom, so no dinnerOptions
 
       addD('custom','Custom price (type ₹)');
       dinnerSelect.onchange = (e)=>{
