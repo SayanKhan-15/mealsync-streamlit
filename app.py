@@ -75,7 +75,7 @@ html = r"""
       border:1px solid rgba(31,41,55,0.9);
       padding: 14px;
       box-sizing:border-box;
-      height: 400px;           /* tall enough for 2 custom inputs */
+      height: 340px;           /* reduced height, shared by days + budgets */
     }
 
     .day-header {
@@ -157,16 +157,16 @@ html = r"""
     .select-icon-lunch svg     { color:#FDE047; }
     .select-icon-dinner svg    { color:#C9A8EE; }
 
-    .budget-label { font-size:13px; color:var(--muted); margin:6px 0 4px 0; }
-    .budget-row { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+    .budget-label { font-size:13px; color:var(--muted); margin:5px 0 3px 0; }
+    .budget-row { display:flex; gap:8px; align-items:center; margin-bottom:6px; }
     .budget-row input[type="text"] {
-      flex:1; padding:9px 12px; border-radius:10px;
+      flex:1; padding:7px 10px; border-radius:10px;
       background: #020617; border:1px solid rgba(51,65,85,0.9);
       color:var(--text);
       box-sizing:border-box; font-size:13px;
     }
     .budget-default-btn {
-      padding:7px 10px; border-radius:999px; min-width:80px; white-space:nowrap; cursor:pointer;
+      padding:6px 10px; border-radius:999px; min-width:80px; white-space:nowrap; cursor:pointer;
       border:1px solid #1D4ED8; background: #2563EB; color:#e5f2ff; font-size:12px; font-weight:600;
     }
 
@@ -220,7 +220,6 @@ html = r"""
 </div>
 
 <script>
-/* ---------- Data + app code wrapped to avoid globals ---------- */
 (function() {
   const BF_MEDU   = {id:'medu',  name:'Medu vada',    price:20};
   const BF_PONGAL = {id:'pongal',name:'Pongal',       price:25};
@@ -306,7 +305,8 @@ html = r"""
     const diff = b - cost;
     if(Math.abs(diff) < 0.005) return '';
     const abs = Math.abs(diff).toFixed(2);
-    const text = diff > 0 ? `+ ${abs}` : `- ${abs}`;
+    // removed space: "+120.00" instead of "+ 120.00"
+    const text = diff > 0 ? `+${abs}` : `-${abs}`;
     const cls = diff > 0 ? 'diff-pos' : 'diff-neg';
     return ` <span class="${cls}">(${text})</span>`;
   }
@@ -611,4 +611,4 @@ html = r"""
 </html>
 """
 
-components.html(html, height=1150, scrolling=True)
+components.html(html, height=1100, scrolling=True)
