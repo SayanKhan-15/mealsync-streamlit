@@ -12,34 +12,41 @@ html = r"""
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     :root{
-      --bg:#0b1116;
-      --card:#0d1620;
+      --bg:#020617;
+      --card:#020617;
+      --card-inner:#0b1220;
       --muted:#9fb6c9;
       --accent:#2563EB;   /* solid blue */
-      --accent2:#7c3aed;
       --frame: rgba(148,163,184,0.45);
       --green:#4ade80;
       --red:#fb7185;
       --text:#e6eef8;
-      --card-padding:12px;
+      --card-padding:14px;
       font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
     }
-    html,body { height:100%; margin:0; padding:0; background: linear-gradient(180deg,#020617 0%, #070b10 100%); color:var(--text); }
+    html,body {
+      height:100%;
+      margin:0;
+      padding:0;
+      background: radial-gradient(circle at top, #020617 0%, #020617 35%, #020617 100%);
+      color:var(--text);
+    }
     .container { max-width:1200px; margin:18px auto; padding:18px; }
-    h1 { text-align:center; color:var(--accent); font-size:36px; margin:0 0 6px 0; }
+    h1 { text-align:center; color:#38bdf8; font-size:36px; margin:0 0 6px 0; font-weight:800; }
     p.subtitle { text-align:center; color: #9aaec0; margin:0 0 18px 0; }
 
-    .week-row { display:flex; justify-content:center; gap:16px; margin:18px 0 18px 0; flex-wrap:wrap; }
+    .week-row { display:flex; justify-content:center; gap:12px; margin:18px 0 18px 0; flex-wrap:wrap; }
     .week-btn {
-      padding:8px 14px;
-      border-radius:18px;
-      border:1px solid rgba(255,255,255,0.12);
-      background: rgba(15,23,42,0.8);
+      padding:8px 18px;
+      border-radius:10px;
+      border:1px solid rgba(148,163,184,0.6);
+      background: #020617;
       color:var(--text);
       cursor:pointer;
+      font-size:14px;
     }
     .week-btn.active {
-      background: var(--accent);      /* solid colour */
+      background: #2563EB;      /* solid colour */
       color:white;
       border-color:#1D4ED8;
     }
@@ -48,80 +55,103 @@ html = r"""
     .grid {
       display:grid;
       grid-template-columns:repeat(4,1fr);
-      gap:14px;
+      gap:18px;
       margin-top:8px;
     }
     @media (max-width: 900px){
       .grid { grid-template-columns:repeat(2,1fr); }
     }
 
-    /* card frames – FIXED HEIGHT so all cards equal */
+    /* day / budgets cards */
     .card {
-      background: var(--card);
-      border-radius:10px;
-      border: 1px solid var(--frame);
+      background: var(--card-inner);
+      border-radius:12px;
+      border:1px solid rgba(15,23,42,0.9);
       padding: var(--card-padding);
       box-sizing:border-box;
-      height: 280px;           /* <- all cards same height */
+      height: 260px;           /* equal height for all 8 cards */
+      box-shadow: 0 12px 30px rgba(15,23,42,0.65);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+    }
+    .card:hover{
+      border-color:#2563EB;
+      box-shadow:0 0 0 1px rgba(37,99,235,0.5), 0 16px 40px rgba(15,23,42,0.9);
+      transform:translateY(-1px);
     }
 
     .day-header {
       display:flex;
       justify-content:space-between;
       align-items:center;
-      margin-bottom:8px;
+      margin-bottom:10px;
     }
-    .day-title { font-weight:700; color:#3B82F6; font-size:16px; }
+    .day-title {
+      font-weight:700;
+      color:#3B82F6;
+      font-size:18px;
+    }
     .day-title.sunday { color:#F87171; }
-    .day-title.budgets { color:var(--text); }
+    .day-title.budgets { color:#ffffff; }
 
     /* SMALL icon-only toggle button */
     .toggle-btn {
-      width:28px;
-      height:28px;
+      width:30px;
+      height:30px;
       border-radius:999px;
-      border:1px solid rgba(255,255,255,0.18);
-      background: rgba(255,255,255,0.06);
+      border:1px solid rgba(148,163,184,0.7);
+      background: #020617;
       cursor:pointer;
       display:flex;
       align-items:center;
       justify-content:center;
       font-size:16px;
-      color:var(--muted);
+      color:#9ca3af;
       padding:0;
     }
 
-    /* Selects with icons inside */
-    .select-wrapper {
+    /* Meal rows styled like in your React UI */
+    .meal-row {
       position:relative;
-      margin:8px 0 4px 0;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:10px 12px;
+      margin-top:10px;
+      border-radius:10px;
+      background: #020617;
+      border:1px solid rgba(51,65,85,0.9);
     }
-    .select-wrapper select {
-      width:100%;
-      padding:10px 12px 10px 44px; /* extra left padding for icon */
-      border-radius:8px;
-      background: rgba(15,23,42,0.9);
-      border:1px solid rgba(148,163,184,0.6);
-      color:var(--text);
-      box-sizing:border-box;
+    .meal-row-inner{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      z-index:1;
+    }
+    .meal-label{
       font-size:14px;
-      appearance:none;
-      -webkit-appearance:none;
-      -moz-appearance:none;
+      color:#e5e7eb;
+      white-space:nowrap;
+    }
+    .meal-label.muted{
+      color:#9ca3af;
     }
 
-    /* Dropdown list colours */
+    .meal-select {
+      position:absolute;
+      inset:0;
+      opacity:0;
+      cursor:pointer;
+      width:100%;
+      height:100%;
+    }
+
+    /* keep select dropdown readable */
     select option {
-      background-color:#020617;   /* dark dropdown panel */
-      color:#e6eef8;              /* light text */
+      background-color:#020617;
+      color:#e6eef8;
     }
 
     .select-icon {
-      position:absolute;
-      left:12px;
-      top:50%;
-      transform:translateY(-50%);
-      pointer-events:none;
       display:flex;
       align-items:center;
       justify-content:center;
@@ -135,7 +165,7 @@ html = r"""
     .select-icon-lunch svg     { color:#FDE047; }
     .select-icon-dinner svg    { color:#C9A8EE; }
 
-    /* Budgets rows: label on its own line, then input + button on one row */
+    /* Budgets rows */
     .budget-label { font-size:13px; color:var(--muted); margin:6px 0 4px 0; }
 
     .budget-row {
@@ -146,35 +176,50 @@ html = r"""
     }
     .budget-row input[type="text"] {
       flex:1;
-      padding:10px 12px;
-      border-radius:8px;
-      background: rgba(15,23,42,0.9);
-      border:1px solid rgba(148,163,184,0.6);
+      padding:9px 12px;
+      border-radius:10px;
+      background: #020617;
+      border:1px solid rgba(51,65,85,0.9);
       color:var(--text);
       box-sizing:border-box;
-      font-size:14px;
+      font-size:13px;
     }
 
     .budget-default-btn {
-      padding:6px 10px;
-      border-radius:10px;
+      padding:7px 10px;
+      border-radius:999px;
       min-width:80px;
       white-space:nowrap;
       cursor:pointer;
       border:1px solid #1D4ED8;
-      background: #2563EB;     /* solid colour, no gradient */
+      background: #2563EB;     /* solid colour */
       color:#e5f2ff;
       font-size:12px;
       font-weight:600;
     }
 
-    .summary { margin-top:16px; border-radius:8px; padding:12px; background: rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.03); }
+    .summary {
+      margin-top:16px;
+      border-radius:10px;
+      padding:14px;
+      background: #020617;
+      border:1px solid rgba(30,64,175,0.9);
+      box-shadow:0 12px 30px rgba(15,23,42,0.8);
+    }
     .summary-row { display:flex; justify-content:space-between; margin-bottom:8px; }
     .summary-row .val { font-weight:700; color:#bfe6ff; }
 
     .muted { color:var(--muted); font-size:13px; }
     .diff-pos { color:var(--green); font-weight:600; }
     .diff-neg { color:var(--red); font-weight:600; }
+
+    .day-total-row{
+      display:flex;
+      justify-content:space-between;
+      margin-top:8px;
+      font-size:13px;
+      color:#e5e7eb;
+    }
 
     input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
   </style>
@@ -382,11 +427,20 @@ function makeGrid(){
 
       const mainType = (day===6) ? 'lunch' : state.dayChoice[`${week}-w${day}`] || 'breakfast';
 
-      /* MAIN SELECT */
-      const mainWrapper = document.createElement('div');
-      mainWrapper.className = 'select-wrapper';
-      mainWrapper.appendChild(createMealIcon(mainType));
+      /* MAIN MEAL ROW */
+      const mainRow = document.createElement('div');
+      mainRow.className = 'meal-row';
+      const mainInner = document.createElement('div');
+      mainInner.className = 'meal-row-inner';
+      const mainIcon = createMealIcon(mainType);
+      mainInner.appendChild(mainIcon);
+      const mainLabel = document.createElement('span');
+      mainLabel.className = 'meal-label';
+      mainInner.appendChild(mainLabel);
+      mainRow.appendChild(mainInner);
+
       const mainSelect = document.createElement('select');
+      mainSelect.className = 'meal-select';
       const mainSelKey = `sel-${week}-${day}-${mainType}`;
 
       let opts;
@@ -416,7 +470,7 @@ function makeGrid(){
         if(state.weeks[week][mainSelKey]===value) o.selected = true;
         mainSelect.appendChild(o);
       };
-      addOption('skip','Skip this meal');
+      addOption('skip','Not planned');
       opts.forEach(m => addOption(m.id, `${m.name} (₹ ${m.price.toFixed(2)})`));
       addOption('custom','Custom price (type ₹)');
       mainSelect.onchange = (e)=>{
@@ -430,9 +484,10 @@ function makeGrid(){
         makeGrid();
         updateSummary();
       };
-      mainWrapper.appendChild(mainSelect);
-      card.appendChild(mainWrapper);
+      mainRow.appendChild(mainSelect);
+      card.appendChild(mainRow);
 
+      /* custom main price input */
       if(state.weeks[week][mainSelKey] === 'custom') {
         const pk = `price-${week}-${day}-${mainType}`;
         if(!(pk in state.weeks[week])) state.weeks[week][pk] = '0';
@@ -443,18 +498,33 @@ function makeGrid(){
           saveState();
           updateSummary();
         };
+        input.style.marginTop = '8px';
+        input.style.width = '100%';
+        input.style.padding = '8px 10px';
+        input.style.borderRadius = '8px';
+        input.style.border = '1px solid rgba(51,65,85,0.9)';
+        input.style.background = '#020617';
+        input.style.color = '#e5e7eb';
         card.appendChild(input);
       }
 
-      /* DINNER SELECT */
-      const dinnerWrapper = document.createElement('div');
-      dinnerWrapper.className = 'select-wrapper';
-      dinnerWrapper.appendChild(createMealIcon('dinner'));
+      /* DINNER ROW */
+      const dinnerRow = document.createElement('div');
+      dinnerRow.className = 'meal-row';
+      const dinnerInner = document.createElement('div');
+      dinnerInner.className = 'meal-row-inner';
+      const dinnerIcon = createMealIcon('dinner');
+      dinnerInner.appendChild(dinnerIcon);
+      const dinnerLabel = document.createElement('span');
+      dinnerLabel.className = 'meal-label';
+      dinnerInner.appendChild(dinnerLabel);
+      dinnerRow.appendChild(dinnerInner);
 
       const dinnerKey = `sel-${week}-${day}-dinner`;
       if(!(dinnerKey in state.weeks[week])) state.weeks[week][dinnerKey] = 'skip';
 
       const dinnerSelect = document.createElement('select');
+      dinnerSelect.className = 'meal-select';
       dinnerSelect.innerHTML = '';
 
       const addD = (v,l)=>{
@@ -464,7 +534,7 @@ function makeGrid(){
         dinnerSelect.appendChild(o);
       };
 
-      addD('skip','Skip this meal');
+      addD('skip','Not planned');
       if(day !== 6){
         dinnerOptions.forEach(m => addD(m.id, `${m.name} (₹ ${m.price.toFixed(2)})`));
       }
@@ -479,8 +549,8 @@ function makeGrid(){
         makeGrid();
         updateSummary();
       };
-      dinnerWrapper.appendChild(dinnerSelect);
-      card.appendChild(dinnerWrapper);
+      dinnerRow.appendChild(dinnerSelect);
+      card.appendChild(dinnerRow);
 
       if(state.weeks[week][dinnerKey] === 'custom'){
         const pk=`price-${week}-${day}-dinner`;
@@ -493,33 +563,58 @@ function makeGrid(){
           saveState();
           updateSummary();
         };
+        input.style.marginTop = '8px';
+        input.style.width = '100%';
+        input.style.padding = '8px 10px';
+        input.style.borderRadius = '8px';
+        input.style.border = '1px solid rgba(51,65,85,0.9)';
+        input.style.background = '#020617';
+        input.style.color = '#e5e7eb';
         card.appendChild(input);
       }
 
       /* ---- DAY TOTAL ROW ---- */
       let dayTotal = 0;
-      const mainSel = state.weeks[week][mainSelKey] || 'skip';
-      dayTotal += priceForSelection(mainType, mainSel, week, day);
+      const mainSelVal = state.weeks[week][mainSelKey] || 'skip';
+      dayTotal += priceForSelection(mainType, mainSelVal, week, day);
       const dSel = state.weeks[week][dinnerKey] || 'skip';
       dayTotal += priceForSelection('dinner', dSel, week, day);
 
       const dayLimit = (day === 6) ? 535 : 140; // Sun vs Mon–Sat
 
       const totalRow = document.createElement('div');
-      totalRow.style.display = 'flex';
-      totalRow.style.justifyContent = 'space-between';
-      totalRow.style.marginTop = '6px';
-      totalRow.style.fontSize = '13px';
-
+      totalRow.className = 'day-total-row';
       const totalLabel = document.createElement('div');
       totalLabel.textContent = 'Day total:';
-
       const totalVal = document.createElement('div');
       totalVal.innerHTML = '₹ ' + dayTotal.toFixed(2) + diffHtml(dayTotal, dayLimit);
-
       totalRow.appendChild(totalLabel);
       totalRow.appendChild(totalVal);
       card.appendChild(totalRow);
+
+      /* set visible labels */
+      function labelForSelection(sel, type){
+        if(sel==='skip') return 'Not planned';
+        if(sel==='custom'){
+          const pk=`price-${week}-${day}-${type}`;
+          const v=(state.weeks[week][pk] || '0').trim();
+          const num=parseFloat(v);
+          const show=isNaN(num)?v:num.toFixed(2);
+          return 'Custom (₹ '+show+')';
+        }
+        let list;
+        if(type==='breakfast') list=breakfastAll;
+        else if(type==='lunch') list=lunchOptions;
+        else list=dinnerOptions;
+        const found=list.find(x=>x.id===sel);
+        return found?`${found.name} (₹ ${found.price.toFixed(2)})`:'Not planned';
+      }
+
+      mainLabel.textContent = labelForSelection(mainSelVal, mainType);
+      if(mainSelVal==='skip') mainLabel.classList.add('muted');
+      const dinnerSelVal = state.weeks[week][dinnerKey] || 'skip';
+      dinnerLabel.textContent = labelForSelection(dinnerSelVal, 'dinner');
+      if(dinnerSelVal==='skip') dinnerLabel.classList.add('muted');
 
     } else {
       /* Budgets card */
@@ -622,6 +717,7 @@ function updateSummary(){
 }
 
 /* ---------- Init ---------- */
+const state = loadState();
 function ensureStructure(){
   for(let w=1; w<=4; w++){
     if(!state.weeks[w]) state.weeks[w] = {};
