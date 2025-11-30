@@ -159,7 +159,7 @@ html = r"""
       display:flex;
       align-items:center;
       gap:10px;
-      /* removed z-index so clicks go to the overlay select */
+      /* no z-index so overlay select captures clicks */
     }
 
     /* allows full text to show, wrapping if needed */
@@ -180,7 +180,7 @@ html = r"""
       cursor:pointer;
       width:100%;
       height:100%;
-      z-index:1; /* ensure the whole row is clickable */
+      z-index:1; /* whole row clickable */
     }
 
     select option {
@@ -249,6 +249,25 @@ html = r"""
       display:flex; justify-content:space-between; margin-top:8px; font-size:13px; color:#e5e7eb;
     }
 
+    /* Reset button under summary */
+    .reset-row{
+      margin-top:10px;
+      text-align:right;
+    }
+    .reset-btn{
+      padding:8px 14px;
+      border-radius:999px;
+      border:1px solid #f97373;
+      background:#7f1d1d;
+      color:#fee2e2;
+      font-size:13px;
+      cursor:pointer;
+    }
+    @media (max-width:600px){
+      .reset-row{ text-align:center; }
+      .reset-btn{ width:100%; }
+    }
+
     /* hide focus outline for the invisible select overlay for nicer look on mobile */
     .meal-select:focus { outline: none; }
 
@@ -272,6 +291,11 @@ html = r"""
     <hr style="border-color:rgba(255,255,255,0.04)"/>
     <div class="summary-row"><div>Weekdays Total:</div><div class="val" id="wdTotalVal">₹ 0.00</div></div>
     <div class="summary-row"><div>Grand Total:</div><div class="val" id="grandVal">₹ 0.00</div></div>
+    <div class="reset-row">
+      <button id="resetBtn" type="button" class="reset-btn">
+        Reset all (4 weeks)
+      </button>
+    </div>
   </div>
 </div>
 
@@ -369,6 +393,23 @@ html = r"""
   }
 
   const state = loadState();
+
+  /* ---------- Reset all weeks + budgets ---------- */
+  function resetAll(){
+    state.selectedWeek = 1;
+    state.weeks = {};
+    for(let w=1; w<=4; w++){ state.weeks[w] = {}; }
+    state.dayChoice = {};
+    state.modified = {};
+    state.budgets = {};
+    for(const k in DEFAULT_BUDGETS){
+      state.budgets[k] = DEFAULT_BUDGETS[k].toFixed(2);
+    }
+    saveState();
+    makeWeekButtons();
+    makeGrid();
+    updateSummary();
+  }
 
   function makeWeekButtons(){
     const wr = document.getElementById('weekRow');
@@ -658,6 +699,15 @@ html = r"""
     makeGrid();
     updateSummary();
     window.mealsyncState = state;
+
+    const resetBtn = document.getElementById('resetBtn');
+    if(resetBtn){
+      resetBtn.addEventListener('click', function(){
+        if(confirm('Reset all 4 weeks and budgets to defaults?')){
+          resetAll();
+        }
+      });
+    }
   });
 
 })();
