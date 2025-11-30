@@ -159,7 +159,7 @@ html = r"""
       display:flex;
       align-items:center;
       gap:10px;
-      z-index:1;
+      /* removed z-index so clicks go to the overlay select */
     }
 
     /* allows full text to show, wrapping if needed */
@@ -180,6 +180,7 @@ html = r"""
       cursor:pointer;
       width:100%;
       height:100%;
+      z-index:1; /* ensure the whole row is clickable */
     }
 
     select option {
