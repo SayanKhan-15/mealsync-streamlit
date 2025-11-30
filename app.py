@@ -159,10 +159,8 @@ html = r"""
       display:flex;
       align-items:center;
       gap:10px;
-      /* no z-index so overlay select captures clicks */
     }
 
-    /* allows full text to show, wrapping if needed */
     .meal-label{
       font-size:14px;
       color:#e5e7eb;
@@ -236,12 +234,10 @@ html = r"""
       font-weight:700;
       color:#bfe6ff;
     }
-    /* ensure label like "Current Week Total" stays on a single line */
     .summary-row > div:first-child {
       white-space: nowrap;
     }
 
-    /* NOT bold for diff text */
     .diff-pos { color:var(--green); font-weight:400; }
     .diff-neg { color:var(--red);   font-weight:400; }
 
@@ -249,7 +245,6 @@ html = r"""
       display:flex; justify-content:space-between; margin-top:8px; font-size:13px; color:#e5e7eb;
     }
 
-    /* Reset button under summary */
     .reset-row{
       margin-top:10px;
       text-align:right;
@@ -261,6 +256,7 @@ html = r"""
       background:#7f1d1d;
       color:#fee2e2;
       font-size:13px;
+      font-weight:600; /* bold like Default button */
       cursor:pointer;
     }
     @media (max-width:600px){
@@ -268,7 +264,6 @@ html = r"""
       .reset-btn{ width:100%; }
     }
 
-    /* hide focus outline for the invisible select overlay for nicer look on mobile */
     .meal-select:focus { outline: none; }
 
     input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
@@ -293,7 +288,7 @@ html = r"""
     <div class="summary-row"><div>Grand Total:</div><div class="val" id="grandVal">₹ 0.00</div></div>
     <div class="reset-row">
       <button id="resetBtn" type="button" class="reset-btn">
-        Reset all (4 weeks)
+        Reset
       </button>
     </div>
   </div>
@@ -313,11 +308,7 @@ html = r"""
   const BF_DAAL   = {id:'daal',  name:'Daal poori',   price:38};
 
   const breakfastBase = [BF_MEDU, BF_PONGAL, BF_SAMBAR, BF_CURD];
-  const specialBreakfastMap = {
-    '1-1': BF_PAV, '3-2': BF_PAV, '1-3': BF_MAGGI, '1-5': BF_ALU,
-    '4-3': BF_ALU, '2-3': BF_MAC, '2-4': BF_MAC, '4-5': BF_DAAL
-  };
-  const breakfastAll = [...breakfastBase, BF_PAV, BF_MAGGI, BF_ALU, BF_MAC, BF_DAAL];
+  const breakfastAll  = [...breakfastBase, BF_PAV, BF_MAGGI, BF_ALU, BF_MAC, BF_DAAL];
 
   const lunchOptions = [
     {id:'l-biryani',  name:'Biryani',      price:85},
@@ -335,7 +326,120 @@ html = r"""
   const DEFAULT_BUDGETS = { weekly:840, sunday:2140, weekdays:3360, grandTotal:5500 };
   const WEEK_DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
-  /* ---------- localStorage state helpers ---------- */
+  /* Default plan taken from your table
+     Index day 0=Mon ... 6=Sun
+  */
+  const BREAKFAST_DEFAULTS = {
+    1: {0:null,    1:'pav',   2:null,   3:'maggi', 4:'medu', 5:'alu',  6:null},
+    2: {0:null,    1:'pongal',2:null,   3:'mac',   4:'mac',  5:null,   6:null},
+    3: {0:null,    1:'sambar',2:'pav',  3:null,    4:'curd', 5:null,   6:null},
+    4: {0:null,    1:'sambar',2:null,   3:'alu',   4:null,   5:'daal', 6:null}
+  };
+
+  const LUNCH_DEFAULTS = {
+    1: {0:'l-biryani',1:null,       2:'l-sambar',3:null,       4:null,       5:null,       6:null},
+    2: {0:'l-biryani',1:null,       2:'l-biryani',3:null,      4:null,       5:'l-biryani',6:null},
+    3: {0:'l-biryani',1:null,       2:null,       3:'l-biryani',4:null,      5:'l-biryani',6:null},
+    4: {0:'l-biryani',1:null,       2:'l-biryani',3:null,      4:'l-biryani',5:null,       6:null}
+  };
+
+  const DINNER_DEFAULTS = {
+    1: {0:'d-dosa',   1:'d-fish',   2:'d-mushroom',3:'d-veg',    4:'d-chicken',5:'d-biryani',6:null},
+    2: {0:'d-dosa',   1:'d-chicken',2:'d-dosa',    3:'d-fish',  4:'d-veg',    5:'d-chicken',6:null},
+    3: {0:'d-dosa',   1:'d-veg',    2:'d-fish',    3:'d-dosa',  4:'d-biryani',5:'d-biryani',6:null},
+    4: {0:'d-dosa',   1:'d-fish',   2:'d-dosa',    3:'d-veg',   4:'d-dosa',   5:'d-chicken',6:null}
+  };
+
+  function createMealIcon(kind){
+    if(kind === 'breakfast'){
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h13a3 3 0 0 0 0-6H4v6z"/><path d="M17 4v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V4"/><line x1="6" y1="18" x2="16" y2="18"/><line x1="8" y1="22" x2="14" y2="22"/></svg>';
+    } else if(kind === 'lunch'){
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.07" y2="4.93"/></svg>';
+    }
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+  }
+
+  function diffHtml(cost, budgetVal){
+    const b = parseFloat(budgetVal);
+    if(isNaN(b)) return '';
+    const diff = b - cost;
+    if(Math.abs(diff) < 0.005) return '';
+    const abs = Math.abs(diff).toFixed(2);
+    const text = diff > 0 ? `+${abs}` : `-${abs}`;
+    const cls = diff > 0 ? 'diff-pos' : 'diff-neg';
+    return ` <span class="${cls}">(${text})</span>`;
+  }
+
+  /* price helper */
+  function priceForSelection(mealType, sel, week, day){
+    if(sel==='skip') return 0;
+    if(sel==='custom'){
+      const key = `price-${week}-${day}-${mealType}`;
+      const v = state.weeks[week][key];
+      return parseFloat(v || 0) || 0;
+    }
+    let list;
+    if(mealType==='breakfast') list = breakfastAll;
+    else if(mealType==='lunch') list = lunchOptions;
+    else list = dinnerOptions;
+    const found = list.find(x=>x.id===sel);
+    return found ? found.price : 0;
+  }
+
+  function getBreakfastConfig(week, dayIndex){
+    const defId = (BREAKFAST_DEFAULTS[week] || {})[dayIndex] || null;
+    let options = breakfastBase.slice();
+    if(defId){
+      const special = breakfastAll.find(m=>m.id===defId);
+      if(special && !options.some(m=>m.id===defId)){
+        options.unshift(special);
+      }
+    }
+    return { defaultId:defId, options };
+  }
+
+  /* Apply default plan into a state object */
+  function applyDefaultMealPlan(s){
+    if(!s.weeks) s.weeks = {};
+    if(!s.dayChoice) s.dayChoice = {};
+    if(!s.modified) s.modified = {};
+
+    for(let w=1; w<=4; w++){
+      if(!s.weeks[w]) s.weeks[w] = {};
+      for(let d=0; d<=6; d++){
+        const bId = (BREAKFAST_DEFAULTS[w] || {})[d] || null;
+        const lId = (LUNCH_DEFAULTS[w]      || {})[d] || null;
+        const dnId= (DINNER_DEFAULTS[w]     || {})[d] || null;
+
+        if(bId) s.weeks[w][`sel-${w}-${d}-breakfast`] = bId;
+        else delete s.weeks[w][`sel-${w}-${d}-breakfast`];
+
+        if(lId) s.weeks[w][`sel-${w}-${d}-lunch`] = lId;
+        else delete s.weeks[w][`sel-${w}-${d}-lunch`];
+
+        if(dnId) s.weeks[w][`sel-${w}-${d}-dinner`] = dnId;
+        else delete s.weeks[w][`sel-${w}-${d}-dinner`];
+
+        if(d < 6){ // Mon-Sat
+          const key = `${w}-w${d}`;
+          if(bId) s.dayChoice[key] = 'breakfast';
+          else if(lId) s.dayChoice[key] = 'lunch';
+          else s.dayChoice[key] = 'breakfast';
+        }
+      }
+    }
+  }
+
+  /* ---------- State ---------- */
+  function createNewState(){
+    const s = { selectedWeek:1, weeks:{}, dayChoice:{}, budgets:{}, modified:{} };
+    for(let w=1; w<=4; w++) s.weeks[w] = {};
+    for(const k in DEFAULT_BUDGETS) s.budgets[k] = DEFAULT_BUDGETS[k].toFixed(2);
+    applyDefaultMealPlan(s);
+    localStorage.setItem('mealsync_state', JSON.stringify(s));
+    return s;
+  }
+
   function loadState(){
     const raw = localStorage.getItem('mealsync_state');
     if(raw){
@@ -348,69 +452,32 @@ html = r"""
         return parsed;
       } catch(e){}
     }
-    const s = { selectedWeek:1, weeks:{}, dayChoice:{}, budgets:{}, modified:{} };
-    for(let w=1; w<=4; w++) s.weeks[w] = {};
-    for(const k in DEFAULT_BUDGETS) s.budgets[k] = DEFAULT_BUDGETS[k].toFixed(2);
-    localStorage.setItem('mealsync_state', JSON.stringify(s));
-    return s;
-  }
-  function saveState(){ localStorage.setItem('mealsync_state', JSON.stringify(state)); }
-
-  function priceForSelection(mealType, sel, week, day){
-    if(sel==='skip') return 0;
-    if(sel==='custom'){
-      const key = `price-${week}-${day}-${mealType}`;
-      const v = state.weeks[week][key];
-      return parseFloat(v || 0) || 0;
-    }
-    let list = (mealType==='breakfast') ? breakfastAll : (mealType==='lunch' ? lunchOptions : dinnerOptions);
-    const found = list.find(x=>x.id===sel);
-    return found ? found.price : 0;
-  }
-  function getBreakfastConfig(week, dayIndex){
-    const key = `${week}-${dayIndex}`;
-    const special = specialBreakfastMap[key];
-    if(special) return { defaultId: special.id, options: [special, ...breakfastBase] };
-    return { defaultId: null, options: breakfastBase };
-  }
-  function createMealIcon(kind){
-    if(kind === 'breakfast'){
-      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h13a3 3 0 0 0 0-6H4v6z"/><path d="M17 4v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V4"/><line x1="6" y1="18" x2="16" y2="18"/><line x1="8" y1="22" x2="14" y2="22"/></svg>';
-    } else if(kind === 'lunch'){
-      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.07" y2="4.93"/></svg>';
-    }
-    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
-  }
-  function diffHtml(cost, budgetVal){
-    const b = parseFloat(budgetVal);
-    if(isNaN(b)) return '';
-    const diff = b - cost;
-    if(Math.abs(diff) < 0.005) return '';
-    const abs = Math.abs(diff).toFixed(2);
-    const text = diff > 0 ? `+${abs}` : `-${abs}`;
-    const cls = diff > 0 ? 'diff-pos' : 'diff-neg';
-    return ` <span class="${cls}">(${text})</span>`;
+    return createNewState();
   }
 
   const state = loadState();
 
-  /* ---------- Reset all weeks + budgets ---------- */
+  function saveState(){ localStorage.setItem('mealsync_state', JSON.stringify(state)); }
+
+  /* RESET EVERYTHING to defaults */
   function resetAll(){
     state.selectedWeek = 1;
     state.weeks = {};
-    for(let w=1; w<=4; w++){ state.weeks[w] = {}; }
     state.dayChoice = {};
     state.modified = {};
     state.budgets = {};
+    for(let w=1; w<=4; w++) state.weeks[w] = {};
     for(const k in DEFAULT_BUDGETS){
       state.budgets[k] = DEFAULT_BUDGETS[k].toFixed(2);
     }
+    applyDefaultMealPlan(state);
     saveState();
     makeWeekButtons();
     makeGrid();
     updateSummary();
   }
 
+  /* ---------- UI Builders ---------- */
   function makeWeekButtons(){
     const wr = document.getElementById('weekRow');
     if(!wr) return;
@@ -459,7 +526,7 @@ html = r"""
 
         const mainType = (day === 6) ? 'lunch' : state.dayChoice[`${week}-w${day}`] || 'breakfast';
 
-        // MAIN MEAL ROW
+        /* MAIN MEAL ROW */
         const mainRow = document.createElement('div');
         mainRow.className = 'meal-row';
         const mainInner = document.createElement('div');
@@ -529,7 +596,7 @@ html = r"""
           card.appendChild(input);
         }
 
-        // DINNER ROW
+        /* DINNER ROW */
         const dinnerRow = document.createElement('div');
         dinnerRow.className = 'meal-row';
         const dinnerInner = document.createElement('div');
@@ -549,7 +616,11 @@ html = r"""
         const dinnerSelect = document.createElement('select');
         dinnerSelect.className = 'meal-select';
         dinnerSelect.innerHTML = '';
-        const addD = (v,l) => { const o = document.createElement('option'); o.value = v; o.innerText = l; if(state.weeks[week][dinnerKey]===v) o.selected = true; dinnerSelect.appendChild(o); };
+        const addD = (v,l) => {
+          const o = document.createElement('option'); o.value = v; o.innerText = l;
+          if(state.weeks[week][dinnerKey]===v) o.selected = true;
+          dinnerSelect.appendChild(o);
+        };
         addD('skip','Not planned');
         if(day !== 6) dinnerOptions.forEach(m => addD(m.id, `${m.name} (₹ ${m.price.toFixed(2)})`));
         addD('custom','Custom price (type ₹)');
@@ -575,22 +646,32 @@ html = r"""
           card.appendChild(input);
         }
 
-        // DAY TOTAL
+        /* DAY TOTAL */
         const mainSelVal = state.weeks[week][mainSelKey] || 'skip';
         const dinnerSelVal = state.weeks[week][dinnerKey] || 'skip';
-        const dayTotal = priceForSelection(mainType, mainSelVal, week, day) + priceForSelection('dinner', dinnerSelVal, week, day);
+        const dayTotal = priceForSelection(mainType, mainSelVal, week, day) +
+                         priceForSelection('dinner', dinnerSelVal, week, day);
         const dayLimit = (day === 6) ? 535 : 140;
         const totalRow = document.createElement('div');
         totalRow.className = 'day-total-row';
         const totalLabel = document.createElement('div'); totalLabel.textContent = 'Day total:';
-        const totalVal = document.createElement('div'); totalVal.innerHTML = '₹ ' + dayTotal.toFixed(2) + diffHtml(dayTotal, dayLimit);
+        const totalVal = document.createElement('div');
+        totalVal.innerHTML = '₹ ' + dayTotal.toFixed(2) + diffHtml(dayTotal, dayLimit);
         totalRow.appendChild(totalLabel); totalRow.appendChild(totalVal);
         card.appendChild(totalRow);
 
         function labelForSelection(sel, type){
           if(sel==='skip') return 'Not planned';
-          if(sel==='custom'){ const pk=`price-${week}-${day}-${type}`; const v=(state.weeks[week][pk]||'0').trim(); const n=parseFloat(v); return 'Custom (₹ '+(isNaN(n)?v:n.toFixed(2))+')'; }
-          const list = (type==='breakfast') ? breakfastAll : (type==='lunch' ? lunchOptions : dinnerOptions);
+          if(sel==='custom'){
+            const pk=`price-${week}-${day}-${type}`;
+            const v=(state.weeks[week][pk]||'0').trim();
+            const n=parseFloat(v);
+            return 'Custom (₹ '+(isNaN(n)?v:n.toFixed(2))+')';
+          }
+          let list;
+          if(type==='breakfast') list = breakfastAll;
+          else if(type==='lunch') list = lunchOptions;
+          else list = dinnerOptions;
           const found = list.find(x=>x.id===sel);
           return found ? `${found.name} (₹ ${found.price.toFixed(2)})` : 'Not planned';
         }
@@ -678,18 +759,19 @@ html = r"""
 
     const cur = document.getElementById('curWeekVal');
     const sun = document.getElementById('sunTotalVal');
-    const wd = document.getElementById('wdTotalVal');
-    const gr = document.getElementById('grandVal');
+    const wd  = document.getElementById('wdTotalVal');
+    const gr  = document.getElementById('grandVal');
     if(cur) cur.innerHTML = '₹ '+curWeek.toFixed(2) + diffHtml(curWeek, bWeekly);
     if(sun) sun.innerHTML = '₹ '+sunTotal.toFixed(2) + diffHtml(sunTotal, bSunday);
-    if(wd) wd.innerHTML = '₹ '+weekdaysTotal.toFixed(2) + diffHtml(weekdaysTotal, bWeekdays);
-    if(gr) gr.innerHTML = '₹ '+grand.toFixed(2) + diffHtml(grand, bGrand);
+    if(wd)  wd.innerHTML  = '₹ '+weekdaysTotal.toFixed(2) + diffHtml(weekdaysTotal, bWeekdays);
+    if(gr)  gr.innerHTML  = '₹ '+grand.toFixed(2) + diffHtml(grand, bGrand);
   }
 
   function ensureStructure(){
     for(let w=1; w<=4; w++){ if(!state.weeks[w]) state.weeks[w] = {}; }
     if(!state.budgets) state.budgets = {};
     if(!state.modified) state.modified = {};
+    if(!state.dayChoice) state.dayChoice = {};
     saveState();
   }
 
@@ -703,7 +785,7 @@ html = r"""
     const resetBtn = document.getElementById('resetBtn');
     if(resetBtn){
       resetBtn.addEventListener('click', function(){
-        if(confirm('Reset all 4 weeks and budgets to defaults?')){
+        if(confirm('Reset all weeks and budgets to defaults?')){
           resetAll();
         }
       });
@@ -716,5 +798,4 @@ html = r"""
 </html>
 """
 
-# High height so everything scrolls nicely on mobile
 components.html(html, height=1600, scrolling=True)
